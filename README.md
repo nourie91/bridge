@@ -1,24 +1,49 @@
 # Bridge
 
-Design in Figma with Claude Code.
+AI-powered design generation using your real design system components and tokens.
 
-Bridge connects your terminal to the Figma Plugin API via WebSocket. Write scripts that create frames, import components, bind variables — all from [Claude Code](https://claude.ai/download).
+Bridge lets [Claude Code](https://claude.ai/download) design directly in Figma using your actual design system — real components, bound variables, and text styles. Not mockups, not screenshots — production-ready Figma layers.
 
 ```
-Terminal (Claude Code)  -->  Bridge Server (:9001)  <--WebSocket-->  Figma Plugin  -->  Figma File
+Claude Code  -->  Bridge Server (:9001)  <--WebSocket-->  Figma Plugin  -->  Your Figma File
+                                                                              (real DS components,
+                                                                               bound variables,
+                                                                               text styles)
+```
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/noe-finary/bridge/main/install.sh | bash
 ```
 
 ## Quick Start
 
-### 1. Install the plugin
+```bash
+cd your-project
+bridge init
+```
 
-**From Figma Community** (recommended):
-Search "Bridge for Claude Code" in Figma > Plugins > Browse, and install it.
+The interactive setup will:
+1. Guide you to install the Figma plugin from [Community](https://www.figma.com/community/plugin/1612231505398639330)
+2. Start the server and test the connection
+3. Extract your DS keys (components, variables, text styles) from Figma
+4. Generate a `CLAUDE.md` with Bridge instructions + your DS keys
 
-**Manual install** (development):
-In Figma > Plugins > Development > Import plugin from manifest, select `plugin/manifest.json`.
+Then open Claude Code and start designing.
 
-### 2. Start the server
+## Commands
+
+```bash
+bridge init       # Interactive project setup
+bridge start      # Start the Bridge server
+bridge extract    # Extract DS keys from current Figma file
+bridge help       # Show available commands
+```
+
+## Manual Setup
+
+If you prefer not to use the install script:
 
 ```bash
 git clone https://github.com/noe-finary/bridge.git
@@ -27,25 +52,7 @@ npm install --prefix server
 node server/server.js
 ```
 
-### 3. Connect
-
-1. Open your target Figma file
-2. Run the Bridge plugin (Plugins > Bridge for Claude Code)
-3. The plugin auto-connects to the server
-
-Verify:
-```bash
-curl -s http://localhost:9001/status
-# {"connected":true,"pendingCommands":0}
-```
-
-### 4. Send your first command
-
-```bash
-curl -s -X POST http://localhost:9001/command \
-  -H "Content-Type: application/json" \
-  -d '{"action":"runScript","code":"return figma.currentPage.name;"}'
-```
+Then install the plugin from [Figma Community](https://www.figma.com/community/plugin/1612231505398639330) or manually via `plugin/manifest.json`.
 
 ## Usage with Claude Code
 
