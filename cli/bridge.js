@@ -6,19 +6,80 @@ const path = require("path");
 const readline = require("readline");
 const http = require("http");
 
-// ─── Colors ───
+// ─── Brand Colors ───
 
 const BOLD = "\x1b[1m";
 const DIM = "\x1b[2m";
-const GREEN = "\x1b[32m";
-const CYAN = "\x1b[36m";
-const YELLOW = "\x1b[33m";
-const RED = "\x1b[31m";
+const ITALIC = "\x1b[3m";
 const RESET = "\x1b[0m";
+
+// Custom palette
+const ACCENT = "\x1b[38;2;99;102;241m";     // indigo #6366f1
+const SUCCESS = "\x1b[38;2;34;197;94m";      // green #22c55e
+const WARN = "\x1b[38;2;250;204;21m";        // yellow #facc15
+const ERROR = "\x1b[38;2;239;68;68m";        // red #ef4444
+const MUTED = "\x1b[38;2;107;114;128m";      // gray #6b7280
+const INFO = "\x1b[38;2;147;151;255m";       // light indigo #9397ff
+const WHITE = "\x1b[38;2;243;244;246m";      // near-white #f3f4f6
 
 const BRIDGE_HOME = path.join(process.env.HOME, ".bridge");
 const PLUGIN_URL = "https://www.figma.com/community/plugin/1612231505398639330";
 const PORT = process.env.BRIDGE_PORT || 9001;
+
+// ─── ASCII Art ───
+
+const LOGO = `
+${ACCENT}  ┌──────────────────────────────────────┐
+  │${RESET}${BOLD}          Bridge for Claude Code       ${RESET}${ACCENT}│
+  │${RESET}${MUTED}    Design in Figma from your terminal   ${RESET}${ACCENT}│
+  └──────────────────────────────────────┘${RESET}
+`;
+
+const LOGO_SMALL = `${ACCENT}${BOLD}  bridge${RESET}`;
+
+// ─── Spinner ───
+
+class Spinner {
+  constructor(text) {
+    this.text = text;
+    this.frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+    this.i = 0;
+    this.interval = null;
+  }
+
+  start() {
+    process.stdout.write("\x1b[?25l"); // hide cursor
+    this.interval = setInterval(() => {
+      const frame = this.frames[this.i % this.frames.length];
+      process.stdout.write(`\r  ${ACCENT}${frame}${RESET} ${this.text}`);
+      this.i++;
+    }, 80);
+    return this;
+  }
+
+  succeed(text) {
+    this.stop();
+    process.stdout.write(`\r  ${SUCCESS}✓${RESET} ${text || this.text}\n`);
+  }
+
+  fail(text) {
+    this.stop();
+    process.stdout.write(`\r  ${ERROR}✗${RESET} ${text || this.text}\n`);
+  }
+
+  update(text) {
+    this.text = text;
+  }
+
+  stop() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
+    process.stdout.write("\x1b[?25h"); // show cursor
+    process.stdout.write("\r\x1b[K");  // clear line
+  }
+}
 
 // ─── Helpers ───
 
@@ -26,20 +87,30 @@ function print(msg = "") {
   console.log(msg);
 }
 
-function step(n, total, title) {
-  print(`\n  ${BOLD}Step ${n}/${total} — ${title}${RESET}`);
+function header(n, total, title) {
+  print();
+  print(`  ${ACCENT}${BOLD}[${n}/${total}]${RESET} ${BOLD}${title}${RESET}`);
+  print(`  ${MUTED}${"─".repeat(40)}${RESET}`);
 }
 
 function success(msg) {
-  print(`  ${GREEN}✓${RESET} ${msg}`);
+  print(`  ${SUCCESS}✓${RESET} ${msg}`);
 }
 
 function info(msg) {
-  print(`  ${YELLOW}→${RESET} ${msg}`);
+  print(`  ${INFO}→${RESET} ${msg}`);
+}
+
+function warn(msg) {
+  print(`  ${WARN}!${RESET} ${msg}`);
 }
 
 function error(msg) {
-  print(`  ${RED}✗${RESET} ${msg}`);
+  print(`  ${ERROR}✗${RESET} ${msg}`);
+}
+
+function muted(msg) {
+  print(`  ${MUTED}${msg}${RESET}`);
 }
 
 function ask(question) {
@@ -48,7 +119,7 @@ function ask(question) {
     output: process.stdout,
   });
   return new Promise((resolve) => {
-    rl.question(`  ${question}`, (answer) => {
+    rl.question(`  ${WHITE}${question}${RESET}`, (answer) => {
       rl.close();
       resolve(answer.trim());
     });
@@ -110,7 +181,7 @@ function postCommand(code) {
   });
 }
 
-async function waitForConnection(timeoutMs = 120000) {
+async function waitForConnection(spinner, timeoutMs = 120000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
@@ -136,120 +207,105 @@ function serverRunning() {
 // ─── Commands ───
 
 async function cmdInit() {
-  print();
-  print(`  ${BOLD}Bridge for Claude Code${RESET}`);
-  print(`  ${DIM}Project setup${RESET}`);
+  print(LOGO);
 
   const totalSteps = 4;
 
   // ─── Step 1: Plugin ───
 
-  step(1, totalSteps, "Figma Plugin");
-  print(`  Install "Bridge for Claude Code" from Figma Community:`);
-  print(`  ${CYAN}${PLUGIN_URL}${RESET}`);
+  header(1, totalSteps, "Figma Plugin");
   print();
-  await ask("Press Enter when installed... ");
-  success("Plugin installed");
+  print(`  Install ${BOLD}"Bridge for Claude Code"${RESET} from Figma Community:`);
+  print();
+  print(`  ${ACCENT}${PLUGIN_URL}${RESET}`);
+  print();
+  await ask(`Press ${BOLD}Enter${RESET} when installed... `);
+  success("Plugin ready");
 
   // ─── Step 2: Connection ───
 
-  step(2, totalSteps, "Connection Test");
+  header(2, totalSteps, "Connection");
 
   let serverProcess = null;
   if (!serverRunning()) {
-    info("Starting Bridge server on port " + PORT + "...");
+    const spinner = new Spinner("Starting Bridge server...").start();
     serverProcess = spawn("node", [path.join(BRIDGE_HOME, "server", "server.js")], {
       stdio: "ignore",
       detached: true,
     });
     serverProcess.unref();
     await new Promise((r) => setTimeout(r, 1500));
+    spinner.succeed(`Server running on port ${PORT}`);
   } else {
-    info("Bridge server already running on port " + PORT);
+    success(`Server already running on port ${PORT}`);
   }
 
+  print();
   print(`  Open your Figma file and run the Bridge plugin.`);
-  print(`  ${DIM}Waiting for connection...${RESET}`);
+  print();
 
-  const connected = await waitForConnection();
+  const spinner = new Spinner("Waiting for Figma connection...").start();
+  const connected = await waitForConnection(spinner);
+
   if (!connected) {
-    error("Connection timeout. Make sure the Bridge plugin is running in Figma.");
+    spinner.fail("Connection timeout");
+    print();
+    error("Make sure the Bridge plugin is running in Figma.");
+    muted("The plugin auto-connects when the server is running.");
     process.exit(1);
   }
-  success("Connected to Figma!");
+
+  spinner.succeed("Connected to Figma");
 
   // ─── Step 3: DS Extraction ───
 
-  step(3, totalSteps, "Design System (optional)");
-  const extractAnswer = await ask("Extract your DS keys from the current Figma file? (y/n) ");
+  header(3, totalSteps, "Design System");
+  print();
+  print(`  Extract component keys, variable keys, and text styles`);
+  print(`  from the Figma file currently open.`);
+  print();
+
+  const extractAnswer = await ask(`Extract your DS? ${MUTED}(y/n)${RESET} `);
 
   const projectDir = path.join(process.cwd(), ".bridge");
 
   if (extractAnswer.toLowerCase() === "y") {
     fs.mkdirSync(path.join(projectDir, "registries"), { recursive: true });
 
-    // Extract components
-    info("Extracting components...");
-    try {
-      const compScript = fs.readFileSync(
-        path.join(BRIDGE_HOME, "extract", "extract-components.js"),
-        "utf8"
-      );
-      const compResult = await postCommand(compScript);
-      const compData = compResult.result || compResult;
-      fs.writeFileSync(
-        path.join(projectDir, "registries", "components.json"),
-        JSON.stringify(compData, null, 2)
-      );
-      success(`Components: ${compData.count || "?"} found`);
-    } catch (e) {
-      error("Components extraction failed: " + e.message);
+    const extractions = [
+      { name: "components", file: "extract-components.js", label: "Components" },
+      { name: "variables", file: "extract-variables.js", label: "Variables" },
+      { name: "text-styles", file: "extract-text-styles.js", label: "Text styles" },
+    ];
+
+    for (const ext of extractions) {
+      const s = new Spinner(`Extracting ${ext.label.toLowerCase()}...`).start();
+      try {
+        const script = fs.readFileSync(
+          path.join(BRIDGE_HOME, "extract", ext.file),
+          "utf8"
+        );
+        const result = await postCommand(script);
+        const data = result.result || result;
+        fs.writeFileSync(
+          path.join(projectDir, "registries", `${ext.name}.json`),
+          JSON.stringify(data, null, 2)
+        );
+        s.succeed(`${ext.label}: ${BOLD}${data.count || "?"}${RESET} found`);
+      } catch (e) {
+        s.fail(`${ext.label}: ${e.message}`);
+      }
     }
 
-    // Extract variables
-    info("Extracting variables...");
-    try {
-      const varScript = fs.readFileSync(
-        path.join(BRIDGE_HOME, "extract", "extract-variables.js"),
-        "utf8"
-      );
-      const varResult = await postCommand(varScript);
-      const varData = varResult.result || varResult;
-      fs.writeFileSync(
-        path.join(projectDir, "registries", "variables.json"),
-        JSON.stringify(varData, null, 2)
-      );
-      success(`Variables: ${varData.count || "?"} found`);
-    } catch (e) {
-      error("Variables extraction failed: " + e.message);
-    }
-
-    // Extract text styles
-    info("Extracting text styles...");
-    try {
-      const tsScript = fs.readFileSync(
-        path.join(BRIDGE_HOME, "extract", "extract-text-styles.js"),
-        "utf8"
-      );
-      const tsResult = await postCommand(tsScript);
-      const tsData = tsResult.result || tsResult;
-      fs.writeFileSync(
-        path.join(projectDir, "registries", "text-styles.json"),
-        JSON.stringify(tsData, null, 2)
-      );
-      success(`Text styles: ${tsData.count || "?"} found`);
-    } catch (e) {
-      error("Text styles extraction failed: " + e.message);
-    }
-
-    success("Registries saved to .bridge/registries/");
+    print();
+    success(`Registries saved to ${MUTED}.bridge/registries/${RESET}`);
   } else {
-    info("Skipped. You can run 'bridge extract' later.");
+    muted("Skipped. Run 'bridge extract' anytime.");
   }
 
   // ─── Step 4: CLAUDE.md ───
 
-  step(4, totalSteps, "Project Setup");
+  header(4, totalSteps, "Project Config");
 
   const claudeMdPath = path.join(process.cwd(), "CLAUDE.md");
   const hasExistingClaudeMd = fs.existsSync(claudeMdPath);
@@ -259,17 +315,17 @@ async function cmdInit() {
   if (hasExistingClaudeMd) {
     const existing = fs.readFileSync(claudeMdPath, "utf8");
     if (existing.includes("Bridge")) {
-      info("CLAUDE.md already contains Bridge instructions. Skipping.");
+      info("CLAUDE.md already has Bridge instructions");
     } else {
       fs.appendFileSync(claudeMdPath, "\n\n" + claudeContent);
-      success("Bridge instructions appended to existing CLAUDE.md");
+      success("Appended Bridge instructions to CLAUDE.md");
     }
   } else {
     fs.writeFileSync(claudeMdPath, claudeContent);
-    success("Generated CLAUDE.md with Bridge instructions");
+    success("Created CLAUDE.md");
   }
 
-  // Add .bridge to .gitignore if not already there
+  // .gitignore
   const gitignorePath = path.join(process.cwd(), ".gitignore");
   if (fs.existsSync(gitignorePath)) {
     const gitignore = fs.readFileSync(gitignorePath, "utf8");
@@ -282,28 +338,32 @@ async function cmdInit() {
   // ─── Done ───
 
   print();
-  print(`  ${GREEN}${BOLD}Setup complete!${RESET}`);
-  print();
-  print(`  ${BOLD}Start designing:${RESET}`);
-  print(`  ${CYAN}bridge start${RESET}        ${DIM}← start the server (if not running)${RESET}`);
-  print(`  ${CYAN}claude${RESET}              ${DIM}← open Claude Code and start designing${RESET}`);
+  print(`  ${ACCENT}┌──────────────────────────────────────┐${RESET}`);
+  print(`  ${ACCENT}│${RESET}  ${SUCCESS}${BOLD}Setup complete!${RESET}                      ${ACCENT}│${RESET}`);
+  print(`  ${ACCENT}│${RESET}                                      ${ACCENT}│${RESET}`);
+  print(`  ${ACCENT}│${RESET}  Next:                                ${ACCENT}│${RESET}`);
+  print(`  ${ACCENT}│${RESET}  ${WHITE}$ bridge start${RESET}    ${MUTED}start server${RESET}       ${ACCENT}│${RESET}`);
+  print(`  ${ACCENT}│${RESET}  ${WHITE}$ claude${RESET}          ${MUTED}start designing${RESET}    ${ACCENT}│${RESET}`);
+  print(`  ${ACCENT}│${RESET}                                      ${ACCENT}│${RESET}`);
+  print(`  ${ACCENT}└──────────────────────────────────────┘${RESET}`);
   print();
 }
 
 async function cmdStart() {
+  print(LOGO_SMALL);
   print();
-  print(`  ${BOLD}Bridge Server${RESET}`);
 
   if (serverRunning()) {
     try {
       const status = await fetchJSON(`http://localhost:${PORT}/status`);
       if (status.connected) {
-        success(`Already running on port ${PORT} — Figma connected`);
+        success(`Running on port ${PORT} — ${SUCCESS}Figma connected${RESET}`);
       } else {
-        success(`Already running on port ${PORT} — waiting for Figma plugin`);
+        success(`Running on port ${PORT} — ${WARN}waiting for Figma${RESET}`);
+        muted("Open your Figma file and run the Bridge plugin.");
       }
     } catch {
-      success(`Already running on port ${PORT}`);
+      success(`Running on port ${PORT}`);
     }
     print();
     return;
@@ -312,7 +372,6 @@ async function cmdStart() {
   info(`Starting on port ${PORT}...`);
   print();
 
-  // Run server in foreground so user sees logs
   const serverPath = path.join(BRIDGE_HOME, "server", "server.js");
   const server = spawn("node", [serverPath], {
     stdio: "inherit",
@@ -320,12 +379,11 @@ async function cmdStart() {
   });
 
   server.on("close", (code) => {
-    if (code !== 0) {
+    if (code !== 0 && code !== null) {
       error(`Server exited with code ${code}`);
     }
   });
 
-  // Handle Ctrl+C gracefully
   process.on("SIGINT", () => {
     server.kill("SIGINT");
     process.exit(0);
@@ -333,36 +391,41 @@ async function cmdStart() {
 }
 
 async function cmdExtract() {
+  print(LOGO_SMALL);
   print();
-  print(`  ${BOLD}Extract Design System${RESET}`);
 
   if (!serverRunning()) {
-    error("Bridge server not running. Start it with: bridge start");
+    error("Server not running");
+    muted("Start it with: bridge start");
     process.exit(1);
   }
 
   try {
     const status = await fetchJSON(`http://localhost:${PORT}/status`);
     if (!status.connected) {
-      error("Figma plugin not connected. Open Bridge plugin in Figma.");
+      error("Figma not connected");
+      muted("Open the Bridge plugin in Figma.");
       process.exit(1);
     }
   } catch {
-    error("Cannot reach Bridge server.");
+    error("Cannot reach server");
     process.exit(1);
   }
 
   const projectDir = path.join(process.cwd(), ".bridge");
   fs.mkdirSync(path.join(projectDir, "registries"), { recursive: true });
 
+  print(`  ${BOLD}Extracting from current Figma file...${RESET}`);
+  print();
+
   const extractions = [
-    { name: "components", file: "extract-components.js" },
-    { name: "variables", file: "extract-variables.js" },
-    { name: "text-styles", file: "extract-text-styles.js" },
+    { name: "components", file: "extract-components.js", label: "Components" },
+    { name: "variables", file: "extract-variables.js", label: "Variables" },
+    { name: "text-styles", file: "extract-text-styles.js", label: "Text styles" },
   ];
 
   for (const ext of extractions) {
-    info(`Extracting ${ext.name}...`);
+    const s = new Spinner(`Extracting ${ext.label.toLowerCase()}...`).start();
     try {
       const script = fs.readFileSync(
         path.join(BRIDGE_HOME, "extract", ext.file),
@@ -374,35 +437,36 @@ async function cmdExtract() {
         path.join(projectDir, "registries", `${ext.name}.json`),
         JSON.stringify(data, null, 2)
       );
-      success(`${ext.name}: ${data.count || "?"} found`);
+      s.succeed(`${ext.label}: ${BOLD}${data.count || "?"}${RESET} found`);
     } catch (e) {
-      error(`${ext.name} failed: ${e.message}`);
+      s.fail(`${ext.label}: ${e.message}`);
     }
   }
 
   print();
-  success("Registries saved to .bridge/registries/");
-  print(`  ${DIM}Re-run 'bridge extract' anytime your DS is updated.${RESET}`);
+  success(`Saved to ${MUTED}.bridge/registries/${RESET}`);
+  muted("Re-run anytime your DS is updated.");
   print();
 }
 
 function cmdHelp() {
+  print(LOGO);
+  print(`  ${BOLD}Commands${RESET}`);
+  print(`  ${MUTED}${"─".repeat(40)}${RESET}`);
+  print(`  ${WHITE}bridge init${RESET}       ${MUTED}Interactive project setup${RESET}`);
+  print(`  ${WHITE}bridge start${RESET}      ${MUTED}Start the Bridge server${RESET}`);
+  print(`  ${WHITE}bridge extract${RESET}    ${MUTED}Extract DS keys from Figma${RESET}`);
+  print(`  ${WHITE}bridge help${RESET}       ${MUTED}Show this message${RESET}`);
   print();
-  print(`  ${BOLD}Bridge for Claude Code${RESET}`);
-  print(`  ${DIM}Design in Figma from your terminal${RESET}`);
+  print(`  ${BOLD}Options${RESET}`);
+  print(`  ${MUTED}${"─".repeat(40)}${RESET}`);
+  print(`  ${WHITE}BRIDGE_PORT=9002 bridge start${RESET}`);
+  print(`  ${MUTED}Use a custom port${RESET}`);
   print();
-  print(`  ${BOLD}Commands:${RESET}`);
-  print(`  ${CYAN}bridge init${RESET}       Interactive project setup`);
-  print(`  ${CYAN}bridge start${RESET}      Start the Bridge server`);
-  print(`  ${CYAN}bridge extract${RESET}    Extract DS keys from current Figma file`);
-  print(`  ${CYAN}bridge help${RESET}       Show this help`);
-  print();
-  print(`  ${BOLD}Options:${RESET}`);
-  print(`  ${DIM}BRIDGE_PORT=9002 bridge start${RESET}   Use custom port`);
-  print();
-  print(`  ${BOLD}Links:${RESET}`);
-  print(`  Plugin:  ${CYAN}${PLUGIN_URL}${RESET}`);
-  print(`  GitHub:  ${CYAN}https://github.com/noe-finary/bridge${RESET}`);
+  print(`  ${BOLD}Links${RESET}`);
+  print(`  ${MUTED}${"─".repeat(40)}${RESET}`);
+  print(`  ${MUTED}Plugin${RESET}   ${ACCENT}${PLUGIN_URL}${RESET}`);
+  print(`  ${MUTED}GitHub${RESET}   ${ACCENT}https://github.com/noe-finary/bridge${RESET}`);
   print();
 }
 
@@ -412,7 +476,6 @@ function generateClaudeMd(projectDir) {
   const registriesDir = path.join(projectDir, "registries");
   let dsSection = "";
 
-  // If registries exist, include a summary
   if (fs.existsSync(path.join(registriesDir, "components.json"))) {
     try {
       const comp = JSON.parse(
@@ -425,7 +488,7 @@ function generateClaudeMd(projectDir) {
       dsSection += `- \`text-styles.json\` — style keys for \`importStyleByKeyAsync\`\n`;
       dsSection += `\nLoad the relevant registry before generating scripts to get the correct keys.\n`;
     } catch {
-      // ignore parse errors
+      // ignore
     }
   }
 
