@@ -1,9 +1,10 @@
 {
   "name": "Bridge for Claude Code",
-  "id": "bridge-for-claude-code",
+  "id": "1612231505398639330",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
+  "documentAccess": "dynamic-page",
   "capabilities": [],
   "networkAccess": {
     "allowedDomains": ["http://localhost:9001", "ws://localhost:9001"],
