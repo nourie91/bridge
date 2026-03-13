@@ -58,7 +58,7 @@ Get your token from [Figma Settings → Personal access tokens](https://help.fig
 
 ```bash
 cd your-project
-npx bridge-ds init
+npx @noemuch/bridge-ds init
 ```
 
 This scaffolds:
