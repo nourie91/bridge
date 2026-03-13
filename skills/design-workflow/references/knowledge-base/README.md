@@ -6,6 +6,13 @@ This directory contains your design system's complete documentation, generated b
 
 ```
 knowledge-base/
+  schemas/                       ← Registry format definitions (read during setup)
+    components.md                ← components.json schema (required fields, extraction scripts)
+    variables.md                 ← variables.json schema
+    text-styles.md               ← text-styles.json schema
+    assets.md                    ← icons/logos/illustrations schema
+    validation.md                ← Post-extraction validation procedure
+
   registries/                    ← Raw DS data (auto-extracted from Figma)
     components.json              ← Component names, keys, variants, properties
     variables.json               ← Variable names, keys, types, values by mode
@@ -42,10 +49,12 @@ knowledge-base/
 
 Run `/design-workflow setup` in Claude Code. Claude will:
 
-1. **Extract** your DS from Figma via `figma_get_design_system_kit`
-2. **Analyze** the raw data and write intelligent guides
-3. **Ask for screenshots** of your product's key screens
-4. **Generate** layout pattern documentation from the screenshots
+1. **Extract** your DS from Figma via MCP tools
+2. **Write registries** following the schemas in `schemas/` (every entry must have a `key` field)
+3. **Validate** registries by test-importing sample keys via `figma_execute`
+4. **Analyze** the raw data and write intelligent guides
+5. **Ask for screenshots** of your product's key screens
+6. **Generate** layout pattern documentation from the screenshots
 
 ## How to update
 

@@ -10,6 +10,10 @@
 | Connected to Figma Desktop | Yes (before design) | Status has `setup.valid: true` |
 | DS libraries enabled | Yes (before design) | User confirmation |
 | Knowledge base exists | Yes (before spec) | `registries/` has JSON files |
+| Registry schemas followed | Yes | All registry files match schemas in `schemas/` — every entry has `key` field |
+| Registry keys validated | Yes | Sample import test passed via `figma_execute` (3-5 keys per registry) |
+| No node IDs as keys | Yes | Component entries have `key` (hex hash), NOT just `id` (node ID like `1008:174`) |
+| Variable keys present | Yes | Variables have `key` field, not just `name` paths |
 
 ---
 

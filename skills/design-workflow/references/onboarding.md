@@ -68,9 +68,22 @@ What do you want to design? (component or screen)
    ```
 
 3. **Write registries** (raw JSON, deterministic):
-   - `registries/components.json` — component names, keys, variants, properties
-   - `registries/variables.json` — variable names, keys, types, values by mode
-   - `registries/text-styles.json` — text style names, keys, font specs
+
+   **CRITICAL: Read the schema for each registry BEFORE writing it:**
+   - `schemas/components.md` → `registries/components.json` (component names, **keys**, variants, properties)
+   - `schemas/variables.md` → `registries/variables.json` (variable names, **keys**, types, values by mode)
+   - `schemas/text-styles.md` → `registries/text-styles.json` (text style names, **keys**, font specs)
+   - `schemas/assets.md` → `registries/icons.json`, `registries/logos.json`, `registries/illustrations.json` (if applicable)
+
+   All paths relative to `knowledge-base/`. The schemas contain extraction scripts and required field definitions. The `key` field is MANDATORY for every component, variable, and style entry — without it, `design` generation will fail.
+
+3b. **Validate registries (BLOCKING):**
+
+   Read `schemas/validation.md` and execute the full validation procedure:
+   1. **Structural check** — verify all registries match their schemas (every entry has `key`, correct types)
+   2. **Import test** — run validation script via `figma_execute` to test-import 3-5 sample keys per registry
+   3. **Remediation** — if ANY validation fails, re-extract the failing items using the remediation scripts
+   4. **Gate** — ALL validation checks MUST pass before proceeding to guide generation
 
 4. **Generate intelligent guides** (Claude analyzes registries and writes):
 
@@ -114,10 +127,11 @@ What do you want to design? (component or screen)
 
 7. **Validation summary:**
    ```
-   Knowledge base built:
-   - {N} components documented ({N} with variants)
-   - {N} variables ({N} colors, {N} spacing, {N} radius)
-   - {N} text styles
+   Knowledge base built and validated:
+   - {N} components documented ({N} with variants) — {N} keys verified via import test ✓
+   - {N} variables ({N} colors, {N} spacing, {N} radius) — {N} keys verified ✓
+   - {N} text styles — {N} keys verified ✓
+   - {N} asset items (icons/logos/illustrations) — {N} keys verified ✓
    - {N} layout patterns extracted from {N} screenshots
 
    Ready to design. Run: `spec {name}`

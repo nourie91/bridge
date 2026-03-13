@@ -159,7 +159,7 @@ text.fontSize = 32;
 
 // CORRECT (key from registries/text-styles.json)
 var style = await figma.importStyleByKeyAsync("YOUR_TEXT_STYLE_KEY");
-await text.setTextStyleIdAsync(style.id);  // MUST use async version — see Rule 20
+await text.setTextStyleIdAsync(style.id);  // MUST use async version — see Rule 21
 ```
 
 **Load text style keys from `registries/text-styles.json`.** Always use `setTextStyleIdAsync()`, not `textStyleId =`.
@@ -410,7 +410,27 @@ mainComponent.y = 400;
 
 ---
 
-## Rule 20: setTextStyleIdAsync (not textStyleId) in dynamic-page context
+## Rule 20: Component key vs Node ID (CRITICAL)
+
+Figma components have TWO different identifiers:
+
+| | Node ID (`id`) | Component Key (`key`) |
+|---|---|---|
+| **Format** | `"1008:174"` (colon-separated numbers) | `"abc123def456..."` (hex hash) |
+| **Used for** | `figma.getNodeByIdAsync()` | `importComponentByKeyAsync()` |
+| **Available from** | Any node | Only published components/variables/styles |
+
+**These are NOT interchangeable.** Import APIs (`importComponentByKeyAsync`, `importComponentSetByKeyAsync`, `importVariableByKeyAsync`, `importStyleByKeyAsync`) all require the `key`, NOT the `id`.
+
+Similarly, variables have:
+- `name`: `"color/background/neutral/boldest"` — human-readable path
+- `key`: `"VariableID:55:114"` or hex hash — for `importVariableByKeyAsync`
+
+**Always verify registries contain `key` fields before writing import scripts. If a registry only has `id` or `name` values, re-run extraction to capture keys.**
+
+---
+
+## Rule 21: setTextStyleIdAsync (not textStyleId) in dynamic-page context
 
 When running scripts via `figma_execute` (which uses `documentAccess: "dynamic-page"`), text style assignment MUST use the async API:
 

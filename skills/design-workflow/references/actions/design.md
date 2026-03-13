@@ -46,6 +46,12 @@ Parse from spec:
 
 All paths relative to `.claude/skills/design-workflow/references/knowledge-base/`.
 
+**Registry key validation (BLOCKING):**
+Before using any registry, verify that entries contain `key` fields (not just `id` or `name`):
+- Components must have `key` (hex hash like `"abc123..."`) — NOT node IDs like `"1008:174"`
+- Variables must have `key` — NOT just name paths like `"color/background/neutral/boldest"`
+- If ANY registry is missing `key` fields → **STOP** and run `schemas/validation.md` procedure before continuing
+
 ### 1b. Pattern Matching (BLOCKING)
 
 **This step is MANDATORY. No design generation without completing it.**
