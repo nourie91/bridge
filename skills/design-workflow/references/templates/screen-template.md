@@ -128,6 +128,18 @@
 
 ---
 
+## Known Preferences
+
+> Learnings from previous designs that apply to this screen.
+> Populated automatically from `knowledge-base/learnings.json` during spec writing.
+> If none apply, write "None — no applicable learnings."
+
+| Rule | Scope | Signals |
+|------|-------|---------|
+| `{rule}` | {global / contextual} | {n} |
+
+---
+
 ## Responsive Rules
 
 | Breakpoint | Layout change |

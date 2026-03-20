@@ -97,9 +97,11 @@ Claude consults the knowledge base, identifies the right pattern, components, an
 ## The Workflow
 
 ```
-setup (once)  →  spec  →  design  →  review  →  done
-                   ↑                    |
-                   └── iterate ─────────┘
+setup (once)  →  spec  →  design  →  review  ──→  done
+                   ↑                    |             |
+                   └── iterate ─────────┘       learn ←┘
+                                           (diff corrections,
+                                            extract preferences)
 ```
 
 ### Spec-first
@@ -140,6 +142,8 @@ knowledge-base/
 | `/design-workflow review` | Validate design against spec + tokens |
 | `/design-workflow done` | Archive spec and ship |
 | `/design-workflow drop` | Abandon with preserved learnings |
+| `/design-workflow learn` | Diff corrections, extract learnings |
+| `/design-workflow sync` | Incremental DS sync (no full re-setup) |
 | `/design-workflow status` | Show current state, suggest next action |
 
 ## License

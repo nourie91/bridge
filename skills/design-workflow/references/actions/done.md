@@ -62,4 +62,5 @@ Check if `learn` was run during this cycle (i.e., `references/knowledge-base/lea
 
 Figma: {url}
 Spec archived: specs/shipped/{name}-spec.md
+Learnings: {n} persisted
 ```
