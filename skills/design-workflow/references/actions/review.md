@@ -100,6 +100,12 @@ Cross-reference every visual element in the design against `registries/component
 
 **If any check fails:** identify the specific gap, reference the pattern rule that was violated, and suggest the fix.
 
+#### F. Component API Quality (component mode)
+
+- [ ] Is the composition pattern the right one? (slots vs config vs compound)
+- [ ] Could the props surface be smaller?
+- [ ] Is the component reusable beyond its primary use case?
+
 #### G. Learning Opportunity
 
 If the review identifies issues that the user may want to correct manually in Figma (spacing adjustments, token swaps, component replacements):
@@ -110,12 +116,6 @@ If the review identifies issues that the user may want to correct manually in Fi
 ```
 
 This hint is informational only — it does not block the review.
-
-#### F. Component API Quality (component mode)
-
-- [ ] Is the composition pattern the right one? (slots vs config vs compound)
-- [ ] Could the props surface be smaller?
-- [ ] Is the component reusable beyond its primary use case?
 
 ### 3. Report
 

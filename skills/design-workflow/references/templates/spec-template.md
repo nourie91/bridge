@@ -124,6 +124,18 @@ interface {Composed}Props {
 
 ---
 
+## Known Preferences
+
+> Learnings from previous designs that apply to this component.
+> Populated automatically from `knowledge-base/learnings.json` during spec writing.
+> If none apply, write "None — no applicable learnings."
+
+| Rule | Scope | Signals |
+|------|-------|---------|
+| `{rule}` | {global / contextual} | {n} |
+
+---
+
 ## Component Properties (Figma)
 
 > Define ALL configurable properties for the Figma component.

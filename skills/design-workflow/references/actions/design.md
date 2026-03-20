@@ -44,7 +44,7 @@ Parse from spec:
 **Load Figma API rules (CRITICAL — read before writing any script):**
 - `references/figma-api-rules.md` → all API patterns, variable binding, boilerplate
 
-All paths relative to `.claude/skills/design-workflow/references/knowledge-base/`.
+All paths relative to `references/knowledge-base/`.
 
 ### 1e. Load Learnings
 
