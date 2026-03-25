@@ -142,3 +142,9 @@ var logoInstance = defaultVariant.createInstance();
 - Illustrations often have theme variants (dark/light/brand)
 - May be component sets (`type: "COMPONENT_SET"`)
 - Naming convention: `{category}/{name}` (e.g., `asset/crypto`, `utility/empty-state`)
+
+---
+
+## Transport Note
+
+For official transport: remove the IIFE wrapper from extraction scripts, add `fileKey` and `description` to the `use_figma` call. See `references/transport-adapter.md` for details.

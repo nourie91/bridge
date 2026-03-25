@@ -19,10 +19,10 @@
 - Load knowledge base registries for validation:
   - `references/knowledge-base/registries/components.json` → verify component instances match registry
   - `references/knowledge-base/registries/variables.json` → verify variable bindings use correct names
-- Inspect Figma design via MCP:
+- Inspect Figma design via MCP (tool names depend on transport — see `references/transport-adapter.md`):
   ```
-  figma_take_screenshot({ node_id: "{nodeId}", file_key: "{fileKey}" })
-  figma_get_variables({ file_key: "{fileKey}" })
+  Screenshot: console → figma_take_screenshot({ node_id, file_key }) / official → get_screenshot({ nodeId, fileKey })
+  Variables:  console → figma_get_variables({ file_key }) / official → get_variable_defs({ fileKey })
   ```
 
 ### 2. Review checklist

@@ -115,3 +115,9 @@ Group text styles by their first path segment:
 - `code` — Monospace / code text
 
 Weight/emphasis variants are the second segment: `regular`, `accent`, `emphasis`, `bold`.
+
+---
+
+## Transport Note
+
+For official transport: remove the IIFE wrapper from extraction scripts, add `fileKey` and `description` to the `use_figma` call. See `references/transport-adapter.md` for details.

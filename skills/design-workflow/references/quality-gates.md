@@ -6,8 +6,8 @@
 
 | Gate | Blocking | Check |
 |------|----------|-------|
-| figma-console-mcp available | Yes (before design) | `figma_get_status()` returns valid connection |
-| Connected to Figma Desktop | Yes (before design) | Status has `setup.valid: true` |
+| Figma MCP transport available | Yes (before design) | Console: `figma_get_status()` returns valid connection / Official: `whoami()` succeeds (see transport-adapter.md Section F) |
+| Connected to Figma | Yes (before design) | Console: `setup.valid: true` / Official: `whoami()` + test `use_figma` call |
 | DS libraries enabled | Yes (before design) | User confirmation |
 | Knowledge base exists | Yes (before spec) | `registries/` has JSON files |
 | Registry schemas followed | Yes | All registry files match schemas in `schemas/` — every entry has `key` field |
@@ -127,8 +127,8 @@
 |------|----------|-------|
 | Active spec exists | Yes | `specs/active/{name}-spec.md` present |
 | Snapshot exists | Yes | `specs/active/{name}-snapshot.json` present |
-| figma-console-mcp available | Yes | `figma_get_status()` returns valid connection |
-| Root node still exists | Yes | `figma_execute` can find the node from snapshot meta |
+| Figma MCP transport available | Yes | Console: `figma_get_status()` / Official: `whoami()` (see transport-adapter.md) |
+| Root node still exists | Yes | Plugin API execution can find the node from snapshot meta |
 | Changes classified | Yes | Every change classified as LEARNING or FLAG |
 | Learnings have valid tokens | Yes | Every LEARNING references a token from `registries/variables.json` |
 | Flags surfaced to user | Yes | All FLAG items reported before saving |
@@ -140,7 +140,7 @@
 | Gate | Blocking | Check |
 |------|----------|-------|
 | Knowledge base exists | Yes | `registries/` has JSON files |
-| figma-console-mcp available | Yes | `figma_get_status()` returns valid connection |
+| Figma MCP transport available | Yes | Console: `figma_get_status()` / Official: `whoami()` (see transport-adapter.md) |
 | Diff computed before apply | Yes | Report shown to user before any registry modification |
 | Breaking changes confirmed | Yes (if removals) | User explicitly approves deletion of removed items |
 | Registry validation after update | Yes | Sample import test passes (3-5 keys per registry) |
@@ -156,3 +156,25 @@
   1. Warn user about quality impact
   2. Log the skip reason
   3. Flag in review as advisory issue
+
+---
+
+## Phase: Quick Mode
+
+Quick mode relaxes some gates while keeping critical ones:
+
+### Relaxed (non-blocking in quick mode)
+- Pattern matching: best-effort, not blocking
+- Spec creation and validation: skipped entirely
+- New components check: skipped (use what exists in registries)
+- Formal review: skipped (user can run separately)
+- Acceptance criteria: none (no spec)
+
+### Still enforced (BLOCKING even in quick mode)
+- Pre-script element audit (Rule 18) — every element must be in registries
+- Zero hardcoded hex colors — all colors via setBoundVariableForPaint
+- Atomic generation — 4-6 scripts with screenshots between
+- DS component reuse — NEVER recreate existing components as raw frames
+- Registry loading — must load and cross-reference before generating
+- Canvas positioning — 80px+ gaps, no stacking at (0,0)
+- Script structure — follow figma-api-rules.md (Rule 17 / Rule 23)

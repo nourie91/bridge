@@ -499,6 +499,22 @@ Input (default)        → components.json key: def456  → import ✓
 
 ---
 
+## Rule 23: Transport-aware scripting
+
+Script format depends on the active MCP transport. See `references/transport-adapter.md` for full details.
+
+| Aspect | Console (`figma_execute`) | Official (`use_figma`) |
+|--------|--------------------------|------------------------|
+| Wrapper | IIFE: `return (async function() { ... })();` | Top-level `await`, no IIFE |
+| Parameters | `{ code }` | `{ fileKey, description, code }` |
+| `figma.notify()` | Allowed | **Forbidden** |
+| `getPluginData()` | Allowed | **Forbidden** (use `getSharedPluginData()`) |
+| Response size | Unlimited | **20KB limit** — chunk large extractions |
+
+**Before writing any script, check which transport is active and use the correct format.**
+
+---
+
 ## Standard Script Boilerplate
 
 ```js
@@ -549,4 +565,51 @@ return (async function() {
 
   return { success: true };
 })();
+```
+
+### Official transport version (use_figma)
+
+Same helpers, no IIFE wrapper. Called with `use_figma({ fileKey: "...", description: "...", code: "..." })`.
+
+```js
+  // ─── FONTS ───
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+  await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+  await figma.loadFontAsync({ family: "Inter", style: "Semi Bold" });
+  await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+
+  // ─── VARIABLES (from registries/variables.json) ───
+  // var spLarge = await figma.variables.importVariableByKeyAsync("YOUR_KEY");
+
+  // ─── HELPERS ───
+  function mf(colorVar) {
+    var p = figma.util.solidPaint("#000000");
+    p = figma.variables.setBoundVariableForPaint(p, "color", colorVar);
+    return [p];
+  }
+
+  function appendFill(parent, child, fillH, fillV) {
+    parent.appendChild(child);
+    if (fillH) child.layoutSizingHorizontal = "FILL";
+    if (fillV) child.layoutSizingVertical = "FILL";
+  }
+
+  function bindPadding(frame, top, right, bottom, left) {
+    if (top) frame.setBoundVariable("paddingTop", top);
+    if (right) frame.setBoundVariable("paddingRight", right);
+    if (bottom) frame.setBoundVariable("paddingBottom", bottom);
+    if (left) frame.setBoundVariable("paddingLeft", left);
+  }
+
+  function bindRadius(frame, radiusVar) {
+    frame.setBoundVariable("topLeftRadius", radiusVar);
+    frame.setBoundVariable("topRightRadius", radiusVar);
+    frame.setBoundVariable("bottomLeftRadius", radiusVar);
+    frame.setBoundVariable("bottomRightRadius", radiusVar);
+  }
+
+  // ─── BUILD ───
+  // ... your design code here ...
+
+  return { success: true };
 ```
