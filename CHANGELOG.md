@@ -2,6 +2,25 @@
 
 All notable changes to Bridge DS are documented here.
 
+## [2.5.0] — 2026-03-25
+
+### Added
+- **Dual MCP transport**: Support for both figma-console-mcp (preferred) and official Figma MCP server (fallback). Auto-detection picks the best available transport.
+- **Express mode**: `/design-workflow quick` skips formal spec, generates from brief description with 2 questions max. Same DS quality guarantees.
+- **Plugin packaging**: `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` for marketplace distribution.
+- **Transport adapter**: `transport-adapter.md` — central reference for tool mapping, script adaptation, and composite DS extraction.
+- **Rule 23**: Transport-aware scripting in `figma-api-rules.md` (IIFE vs top-level await, official transport constraints).
+- **KB path resolution**: `./bridge-ds/` (plugin mode) or `.claude/skills/` (npm scaffold mode).
+- **`.mcp.json`**: MCP server dependency declaration for plugin installs.
+
+### Changed
+- `mcp-setup.js`: Returns `{ console, official }` instead of boolean.
+- `cli.js`: Reports both transports during init, offers dual setup instructions.
+- `onboarding.md`: Dual transport detection + composite DS extraction for official transport.
+- `quality-gates.md`: Quick mode section with relaxed gates (pattern matching best-effort, no formal spec/review).
+- 6 schema files updated with transport notes.
+- `package.json`: Bumped to v2.5.0, added plugin manifests to `files`.
+
 ## [2.4.1] — 2026-03-20
 
 ### Fixed

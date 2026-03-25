@@ -8,8 +8,9 @@ Bridge turns [Claude Code](https://claude.ai/download) into a designer that know
 You describe what you want
   → Claude consults the knowledge base (your DS, documented)
   → Claude writes the spec (exact components, tokens, layout)
-  → Claude generates in Figma via figma_execute (real DS components, bound variables)
+  → Claude generates in Figma (real DS components, bound variables)
   → You review in Figma
+  → Claude learns from your corrections (and improves next time)
 ```
 
 ## How it works
@@ -19,21 +20,23 @@ Bridge is two things:
 1. **A CLI** (`bridge-ds init`) that scaffolds your project with the design workflow skill
 2. **A Claude Code skill** (`/design-workflow`) that handles the intelligence — spec writing, DS knowledge, Figma generation
 
-The transport layer is [figma-console-mcp](https://github.com/southleft/figma-console-mcp), an MCP server that gives Claude native access to Figma (57+ tools).
+Bridge supports two MCP transports:
 
 ```
-Claude Code  ──MCP──>  figma-console-mcp  ──WebSocket──>  Figma Desktop
-                                                            (your DS library,
-                                                             real components,
-                                                             bound variables)
+Claude Code  ──MCP──>  figma-console-mcp  ──WebSocket──>  Figma Desktop  (preferred)
+Claude Code  ──MCP──>  Figma MCP Server   ──Cloud──>      Figma Cloud    (official, fallback)
 ```
+
+Auto-detection picks the best available transport. See [transport-adapter.md](skills/design-workflow/references/transport-adapter.md) for details.
 
 ## Prerequisites
 
 - [Claude Code](https://claude.ai/download) installed
 - [Node.js 18+](https://nodejs.org)
-- [Figma Desktop](https://www.figma.com/downloads/) (not the web app)
 - A Figma file with a published design system library
+- One of:
+  - [figma-console-mcp](https://github.com/southleft/figma-console-mcp) + [Figma Desktop](https://www.figma.com/downloads/) (recommended, full capabilities)
+  - Official Figma MCP server (simpler setup, cloud-based)
 
 ## Quick Start
 
@@ -104,6 +107,9 @@ setup (once)  →  spec  →  design  →  review  ──→  done
                                             extract preferences)
 ```
 
+### Express mode
+For quick iterations, skip the formal spec: `/design-workflow quick "a settings page"`. 2 questions max, inline mini-spec, same DS quality guarantees.
+
 ### Spec-first
 No design without a validated specification. Claude knows exactly which components, tokens, and layout patterns to use because it has your DS documented.
 
@@ -139,12 +145,17 @@ knowledge-base/
 | `/design-workflow setup` | Extract DS + build knowledge base |
 | `/design-workflow spec {name}` | Write a component or screen spec |
 | `/design-workflow design` | Generate in Figma from active spec |
+| `/design-workflow quick {description}` | Express generation — skip spec, generate directly |
 | `/design-workflow review` | Validate design against spec + tokens |
 | `/design-workflow done` | Archive spec and ship |
 | `/design-workflow drop` | Abandon with preserved learnings |
 | `/design-workflow learn` | Diff corrections, extract learnings |
 | `/design-workflow sync` | Incremental DS sync (no full re-setup) |
 | `/design-workflow status` | Show current state, suggest next action |
+
+## Author
+
+Built by [Noé Chagué](https://www.linkedin.com/in/noechague/) — Design System @ [Finary](https://finary.com)
 
 ## License
 
