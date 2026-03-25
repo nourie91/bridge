@@ -1,6 +1,5 @@
 {
   "name": "bridge-ds",
-  "displayName": "Bridge Design System",
   "version": "2.5.1",
   "description": "AI-powered design generation in Figma — spec-first, DS-native, with a learning loop that improves over time. Extracts your real design system, writes validated specs, and generates production-ready Figma designs using actual DS components and tokens.",
   "author": {
@@ -20,12 +19,7 @@
     "spec-first",
     "design-generation"
   ],
-  "skills": {
-    "design-workflow": "./skills/design-workflow/SKILL.md"
-  },
-  "commands": {
-    "design-workflow": "./commands/design-workflow.md"
-  },
-  "instructions": "./CLAUDE.md",
+  "skills": "./skills/",
+  "commands": "./commands/",
   "mcpServers": "./.mcp.json"
 }
