@@ -180,3 +180,9 @@ If validation fails after remediation attempts, ask the user to verify:
 1. The DS library is published (not just local)
 2. The library is enabled in the target Figma file
 3. The correct Figma file was used for extraction
+
+---
+
+## Transport Note
+
+For official transport: remove the IIFE wrapper from extraction and validation scripts, add `fileKey` and `description` to the `use_figma` call. See `references/transport-adapter.md` for details.
