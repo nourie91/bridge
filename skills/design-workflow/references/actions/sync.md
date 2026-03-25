@@ -7,7 +7,7 @@
 ## Prerequisites
 
 - Knowledge base exists (`references/knowledge-base/registries/` has JSON files) — abort if missing: "No knowledge base found. Run: `setup` first."
-- figma-console-mcp available (check with `figma_get_status`)
+- Figma MCP transport available (console: `figma_get_status`, official: `whoami` — see `references/transport-adapter.md` Section F)
 
 ---
 
@@ -27,12 +27,19 @@ Note the `meta.fileKey` from any registry to identify the DS source file.
 
 ### 2. Re-extract from Figma
 
-Use the same MCP tools as `setup`:
+Use the same MCP tools as `setup` (tool names depend on transport — see `references/transport-adapter.md`):
+
+**Console transport:**
 - `figma_get_design_system_kit({ file_key })` → full DS snapshot
 - `figma_get_variables({ file_key })` → current variables
 - `figma_get_styles({ file_key })` → current text/color/effect styles
+- If keys missing, supplement with `figma_execute` extraction scripts (from `schemas/`)
 
-If `figma_get_design_system_kit` doesn't return component keys, supplement with `figma_execute` extraction scripts (same as in `schemas/components.md`).
+**Official transport** (composite strategy — see transport-adapter.md Section D):
+- `get_variable_defs({ fileKey })` → variables
+- `search_design_system({ query: "*", includeComponents: true })` → components
+- `search_design_system({ query: "*", includeStyles: true })` → styles
+- Supplement with `use_figma` extraction scripts from schemas as needed
 
 ### 3. Diff registries
 

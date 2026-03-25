@@ -151,3 +151,9 @@ frame.setBoundVariable('itemSpacing', spMedium);
 var bgColor = await figma.variables.importVariableByKeyAsync("VariableID:19:114");
 frame.fills = mf(bgColor);  // using the mf() helper
 ```
+
+---
+
+## Transport Note
+
+For official transport: remove the IIFE wrapper from extraction scripts, add `fileKey` and `description` to the `use_figma` call. See `references/transport-adapter.md` for details.

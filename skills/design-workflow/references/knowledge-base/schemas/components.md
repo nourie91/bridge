@@ -122,3 +122,9 @@ Group components by semantic category:
 - `indicators` — Avatars, Status, Progress
 
 Use whatever categories match the DS's own organization.
+
+---
+
+## Transport Note
+
+For official transport: remove the IIFE wrapper from extraction scripts, add `fileKey` and `description` to the `use_figma` call. See `references/transport-adapter.md` for details.

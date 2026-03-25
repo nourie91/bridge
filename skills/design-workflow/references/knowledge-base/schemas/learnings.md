@@ -242,3 +242,9 @@ knowledge-base/
 specs/active/
   {name}-snapshot.json    ← Temporary snapshot (deleted after done)
 ```
+
+---
+
+## Transport Note
+
+For official transport: remove the IIFE wrapper from the node tree extraction script, add `fileKey` and `description` to the `use_figma` call. See `references/transport-adapter.md` for details.

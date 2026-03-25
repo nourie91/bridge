@@ -1,13 +1,15 @@
 # Action: design
 
-> Generate a Figma design from the active spec via figma-console-mcp.
+> Generate a Figma design from the active spec via Figma MCP transport.
+>
+> **Before generating, check `references/transport-adapter.md` to determine the active transport.** Tool names and script format vary by transport.
 
 ---
 
 ## Prerequisites
 
 - Active spec in `specs/active/` (abort if missing: "No active spec. Run: `spec {name}`")
-- figma-console-mcp MCP server available (check with `figma_get_status`)
+- Figma MCP transport available (console: `figma_get_status`, official: `whoami` — see transport-adapter.md Section F)
 - **If screen spec lists "New DS Components Required"**: all listed components MUST be spec'd and designed first. Abort and prompt: "New component `{name}` needs to be created first. Run: `spec {name}`"
 
 ---
@@ -91,8 +93,8 @@ Key rules applied: {bullet list}
 
 **If the spec has a "Reference Screen" section with a Figma URL/node ID, this step is MANDATORY.**
 
-1. **Screenshot the reference** via `figma_take_screenshot({ node_id, file_key })`
-2. **Inspect the reference structure** via `figma_execute` — extract the node tree:
+1. **Screenshot the reference** (console: `figma_take_screenshot({ node_id, file_key })`, official: `get_screenshot({ nodeId, fileKey })`)
+2. **Inspect the reference structure** via Plugin API (console: `figma_execute`, official: `use_figma` with fileKey+description) — extract the node tree:
    ```js
    return (async function() {
      var ref = await figma.getNodeByIdAsync("REFERENCE_NODE_ID");
@@ -145,30 +147,40 @@ Ask the user:
 - **Which Figma file?** (URL or fileKey)
 - **Which page?** (or create a new page)
 
-Verify connection:
+Verify connection (transport-neutral — see transport-adapter.md Section F):
 ```
-figma_get_status()
+Console: figma_get_status()
+Official: whoami() + test use_figma call
 ```
 
 **Library activation check:** Verify DS libraries are **enabled** in the target file. `importComponentByKeyAsync` only works with published AND enabled libraries.
 
 ### 3. Generate the design — Atomic Steps
 
-Write and execute Figma Plugin API scripts via `figma_execute`.
+Write and execute Figma Plugin API scripts (console: `figma_execute`, official: `use_figma` — see `references/transport-adapter.md` Section C for script format).
 
 **Before writing any script, read `references/figma-api-rules.md`.** It contains:
 - Mandatory patterns (FILL after appendChild, variable binding, font loading)
 - DS component reuse rules (Rule 18) and canvas positioning (Rule 19)
 - Standard script boilerplate with helpers
 
-**Script execution via MCP:**
+**Script execution via MCP (format depends on transport — see transport-adapter.md Section C):**
+
+Console:
 ```
 figma_execute({
   code: "return (async function() { ... your Plugin API code ... return { success: true }; })();"
 })
 ```
 
-The `return` before the IIFE is mandatory — without it, the Promise is lost.
+Official:
+```
+use_figma({
+  fileKey: "...",
+  description: "Step N: ...",
+  code: "await figma.loadFontAsync(...); ... return { success: true };"
+})
+```
 
 **Atomic generation (MANDATORY approach):**
 
@@ -220,9 +232,10 @@ NEVER recreate as raw frame/text/shape. NEVER hardcode hex colors — always bin
 | 3. Bind props | `componentPropertyReferences` on all nodes | ~30-40 | — |
 | 4. Refinements | Adjust spacing, sizing, visual polish | ~20-30 | — |
 
-**After each step:** verify visually with `figma_take_screenshot` before proceeding:
+**After each step:** verify visually with a screenshot before proceeding (console: `figma_take_screenshot({ node_id, file_key })`, official: `get_screenshot({ nodeId, fileKey })` — both require nodeId and fileKey):
 ```
-figma_take_screenshot({ node_id: "{rootOrSectionId}", file_key: "{fileKey}" })
+Console: figma_take_screenshot({ node_id: "{rootOrSectionId}", file_key: "{fileKey}" })
+Official: get_screenshot({ nodeId: "{rootOrSectionId}", fileKey: "{fileKey}" })
 ```
 Compare the screenshot against the spec and reference patterns. If something is wrong, fix it before moving to the next step.
 

@@ -1,51 +1,53 @@
 # Bridge DS — Claude Code Instructions
 
-Bridge DS is an AI-powered design workflow that generates Figma designs using your real design system. It uses [figma-console-mcp](https://github.com/southleft/figma-console-mcp) as the transport layer.
+Bridge DS is an AI-powered design workflow that generates Figma designs using your real design system. It supports two MCP transports: [figma-console-mcp](https://github.com/southleft/figma-console-mcp) (preferred) and the official Figma MCP server (fallback).
 
 ## Architecture
 
 ```
-Claude Code  ──MCP──>  figma-console-mcp  ──WebSocket──>  Figma Desktop
+Claude Code  ──MCP──>  figma-console-mcp  ──WebSocket──>  Figma Desktop  (local, preferred)
+Claude Code  ──MCP──>  Figma MCP Server   ──Cloud──>      Figma Cloud    (official, fallback)
 ```
 
-All Figma operations use MCP tools — no custom server, no HTTP calls, no curl.
+All Figma operations use MCP tools — no custom server, no HTTP calls, no curl. See `skills/design-workflow/references/transport-adapter.md` for transport detection and tool mapping.
 
 ## Key MCP Tools
 
-| Tool | Usage |
-|------|-------|
-| `figma_execute` | Run Figma Plugin API code (create frames, import components, bind variables) |
-| `figma_take_screenshot` | Visual verification between atomic generation steps |
-| `figma_get_design_system_kit` | Extract full DS (tokens + components + styles) |
-| `figma_get_variables` | Extract design tokens/variables |
-| `figma_get_component` | Get component specs and properties |
-| `figma_get_styles` | Get text, color, effect styles |
-| `figma_search_components` | Find components by name |
-| `figma_get_status` | Check Figma connection |
+Tools vary by transport. See `references/transport-adapter.md` for the full mapping.
 
-## Script Structure (for figma_execute)
+| Operation | Console transport | Official transport |
+|-----------|------------------|--------------------|
+| Execute Plugin API code | `figma_execute` | `use_figma` |
+| Take screenshot | `figma_take_screenshot` | `get_screenshot` |
+| Full DS extraction | `figma_get_design_system_kit` | Composite (see transport-adapter.md) |
+| Get variables | `figma_get_variables` | `get_variable_defs` |
+| Get styles | `figma_get_styles` | `search_design_system` |
+| Search components | `figma_search_components` | `search_design_system` |
+| Connection check | `figma_get_status` | `whoami` |
 
-Every script must follow this pattern:
+## Script Structure
+
+Script format depends on the active transport. See `references/transport-adapter.md` Section C for full rules.
+
+**Console transport (figma_execute) — IIFE wrapper mandatory:**
 
 ```javascript
 return (async function() {
-  // 1. Load fonts (required before ANY text operation)
   await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-
-  // 2. Import DS assets (keys from knowledge-base/registries/)
-  // var myVar = await figma.variables.importVariableByKeyAsync("key");
-  // var myStyle = await figma.importStyleByKeyAsync("key");
-  // var myComp = await figma.importComponentByKeyAsync("key");
-
-  // 3. Build
-  // ...
-
-  // 4. Return summary
+  // ... Plugin API code ...
   return { success: true };
 })();
 ```
 
-The `return` before the IIFE is mandatory — without it the Promise is lost.
+**Official transport (use_figma) — top-level await, no IIFE:**
+
+```javascript
+await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+// ... Plugin API code ...
+return { success: true };
+```
+
+Called as: `use_figma({ fileKey: "...", description: "...", code: "..." })`
 
 ## Critical Figma API Rules
 

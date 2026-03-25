@@ -12,7 +12,7 @@ description: >
 # Design Workflow
 
 > Spec-first workflow for designers using Claude Code to design in Figma.
-> Powered by [figma-console-mcp](https://github.com/southleft/figma-console-mcp) as transport.
+> Powered by Figma MCP transport (console or official). See `references/transport-adapter.md`.
 > **All output in the user's language.**
 
 ---
@@ -72,7 +72,7 @@ The `spec` action auto-detects the mode from context, or asks the user.
 
 ```
 setup (first time only)
-  → Extract DS via figma-console-mcp
+  → Extract DS via Figma MCP transport
   → Build knowledge base (registries + guides)
   ↓
 spec {name}
@@ -209,6 +209,7 @@ Full definitions: `references/quality-gates.md` (read before any phase transitio
 
 | Reference | Path |
 |-----------|------|
+| Transport adapter | `references/transport-adapter.md` |
 | Quality gates | `references/quality-gates.md` |
 | Figma API rules | `references/figma-api-rules.md` |
 | Onboarding flow | `references/onboarding.md` |
@@ -221,15 +222,14 @@ Full definitions: `references/quality-gates.md` (read before any phase transitio
 
 ## MCP Tools Used
 
-Bridge uses [figma-console-mcp](https://github.com/southleft/figma-console-mcp) for all Figma operations:
+Bridge supports two Figma MCP transports. Tool names vary by transport — see `references/transport-adapter.md` for the full mapping table and adaptation rules.
 
-| Tool | Usage |
-|------|-------|
-| `figma_execute` | Run Figma Plugin API code (create frames, import components, bind variables) |
-| `figma_take_screenshot` | Visual verification between atomic steps |
-| `figma_get_design_system_kit` | Extract full DS (tokens + components + styles) during setup |
-| `figma_get_variables` | Extract design tokens/variables |
-| `figma_get_component` | Get component specs and properties |
-| `figma_get_styles` | Get text, color, effect styles |
-| `figma_search_components` | Find components by name |
-| `figma_get_status` | Check Figma connection |
+| Operation | Console transport | Official transport |
+|-----------|------------------|--------------------|
+| Execute Plugin API code | `figma_execute` | `use_figma` |
+| Take screenshot | `figma_take_screenshot` | `get_screenshot` |
+| Full DS extraction | `figma_get_design_system_kit` | Composite strategy |
+| Get variables | `figma_get_variables` | `get_variable_defs` |
+| Get styles | `figma_get_styles` | `search_design_system` |
+| Search components | `figma_search_components` | `search_design_system` |
+| Connection check | `figma_get_status` | `whoami` |

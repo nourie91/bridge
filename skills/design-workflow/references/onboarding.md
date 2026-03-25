@@ -34,13 +34,31 @@ STEP 6  Done (archive + retro)
 
 **Trigger**: any design-related request (spec, design, new component, new screen, setup, etc.)
 
-### 0a. Check figma-console-mcp
+### 0a. Check Figma MCP Transport
 
-| Check | How to verify | Block message if fail |
-|-------|--------------|----------------------|
-| figma-console-mcp available | Call `figma_get_status()` — should return connection info | "figma-console-mcp is not configured. Run: `claude mcp add figma-console -s user -e FIGMA_ACCESS_TOKEN=figd_YOUR_TOKEN -- npx -y figma-console-mcp@latest`" |
-| Connected to Figma | `figma_get_status()` returns `setup.valid: true` | "Figma Desktop is not connected. Open your Figma file → Plugins → Development → Run the Desktop Bridge plugin." |
-| DS libraries enabled | Ask user to confirm | "Make sure your DS libraries are enabled in the target Figma file (Assets panel → Team → Enable). Confirm when done." |
+Detect which transport is available (see `references/transport-adapter.md` Section A):
+
+1. **Check console transport:** Is `figma_execute` available? Try `figma_get_status()`.
+2. **Check official transport:** Is `use_figma` available? Try `whoami()`.
+
+| Result | Action |
+|--------|--------|
+| Console available | Use console transport. Verify: `figma_get_status()` returns `setup.valid: true` |
+| Official only | Use official transport. Verify: `whoami()` succeeds, then test `use_figma` call |
+| Both available | Use console (preferred — more capable, no response limits) |
+| Neither available | **Block.** Show setup instructions for both options (see transport-adapter.md Section A) |
+
+**Post-detection checks:**
+
+| Check | Console | Official | Block message if fail |
+|-------|---------|----------|-----------------------|
+| Transport connected | `figma_get_status()` → `setup.valid: true` | `whoami()` succeeds + test `use_figma` call | Console: "Figma Desktop is not connected. Open: Plugins → Development → Desktop Bridge." / Official: "Figma MCP not authenticated. Check your Figma MCP configuration." |
+| DS libraries enabled | Ask user to confirm | Ask user to confirm | "Make sure your DS libraries are enabled in the target Figma file (Assets panel → Team → Enable). Confirm when done." |
+
+Report the active transport:
+```
+Transport: {console | official} ✓
+```
 
 **Note:** Setup check can be deferred to just before STEP 4 (design) if the user only wants to write a spec first. But it MUST pass before any Figma generation.
 
@@ -61,11 +79,21 @@ What do you want to design? (component or screen)
 1. **Ask the user for the DS library file key/URL** (the Figma file containing their design system)
 
 2. **Extract raw data via MCP tools:**
+
+   **Console transport:**
    ```
    figma_get_design_system_kit({ file_key: "...", format: "full" })
    figma_get_variables({ file_key: "..." })
    figma_get_styles({ file_key: "..." })
    ```
+
+   **Official transport** (no `figma_get_design_system_kit`): Use the composite strategy from `references/transport-adapter.md` Section D:
+   ```
+   get_variable_defs({ fileKey: "..." })
+   search_design_system({ query: "*", includeComponents: true })
+   search_design_system({ query: "*", includeStyles: true })
+   ```
+   Supplement with `use_figma` extraction scripts from the schemas as needed.
 
 3. **Write registries** (raw JSON, deterministic):
 
@@ -278,7 +306,7 @@ Now we can design the screen with real DS components.
 **Prerequisites (ALL must pass):**
 - [ ] Spec validated (STEP 2 passed)
 - [ ] New components created if needed (STEP 3 passed)
-- [ ] figma-console-mcp connected (STEP 0 check)
+- [ ] Figma MCP transport connected (STEP 0 check)
 - [ ] DS libraries enabled
 
 **If any prerequisite fails → block with specific message from Block Messages Reference.**
@@ -344,8 +372,8 @@ Ready for the next design!
 
 | Situation | Message |
 |-----------|---------|
-| No MCP server | "figma-console-mcp is not configured. Run: `claude mcp add figma-console -s user -e FIGMA_ACCESS_TOKEN=figd_YOUR_TOKEN -- npx -y figma-console-mcp@latest`" |
-| Not connected | "Figma Desktop is not connected. Open: Plugins → Development → Desktop Bridge." |
+| No MCP transport | "No Figma MCP transport detected. See `references/transport-adapter.md` Section A for setup instructions (console or official)." |
+| Not connected | Console: "Figma Desktop is not connected. Open: Plugins → Development → Desktop Bridge." / Official: "Figma MCP not authenticated. Check your configuration." |
 | Libraries not enabled | "Enable your DS libraries in the target Figma file: Assets → Team → Enable." |
 | No knowledge base | "Knowledge base not built yet. Run: `setup`" |
 | No active spec | "No active spec. Let's create one: component or screen?" |

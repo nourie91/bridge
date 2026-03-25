@@ -8,7 +8,7 @@
 
 - Active spec in `specs/active/` (abort if missing: "No active spec. Run: `spec {name}`")
 - Snapshot file exists at `specs/active/{name}-snapshot.json` (abort if missing: "No snapshot found. The design must have been generated with the latest workflow. Re-run: `design`")
-- figma-console-mcp available (check with `figma_get_status`)
+- Figma MCP transport available (console: `figma_get_status`, official: `whoami` — see `references/transport-adapter.md` Section F)
 
 ---
 
@@ -23,11 +23,14 @@
 
 ### 2. Re-extract current state
 
-Run the same node tree extraction script used for snapshots (see `schemas/learnings.md`) via `figma_execute`, using the `rootNodeId` and `fileKey` from the snapshot's `meta`.
+Run the same node tree extraction script used for snapshots (see `schemas/learnings.md`) via Plugin API execution, using the `rootNodeId` and `fileKey` from the snapshot's `meta`.
 
 ```
-figma_execute({ code: "...extraction script with ROOT_NODE_ID from snapshot meta..." })
+Console: figma_execute({ code: "...extraction script with ROOT_NODE_ID from snapshot meta..." })
+Official: use_figma({ fileKey: "...", description: "Re-extract node tree for learn diff", code: "...same script without IIFE wrapper..." })
 ```
+
+See `references/transport-adapter.md` Section C for script format differences.
 
 ### 3. Diff snapshot vs current state
 
