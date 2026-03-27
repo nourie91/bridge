@@ -23,10 +23,17 @@ Otherwise → **Interactive mode.** Follow all steps including questions.
 ## Procedure
 
 ### Step 1 — Load context
-1. Load all registries (components.json, variables.json, text-styles.json, icons.json, logos.json, illustrations.json)
-2. Load all guides (token usage, component overview, design patterns)
+
+**If a system prompt containing "QUICK-BUNDLE" is present:**
+→ All registries, rules, helpers, and learnings are already in your context. Do NOT read any registry files, guides, or figma-api-rules.md. Skip directly to Step 2 (or Step 3 if brief provided).
+
+**Otherwise (interactive mode):**
+1. Check if `quick-bundle.md` exists in the knowledge base directory. If yes, read ONLY that file — it contains all registries, rules, and helpers condensed. Skip individual file reads.
+2. If no bundle exists, load registries individually: components.json, variables.json, text-styles.json, icons.json, logos.json, illustrations.json
 3. Load learnings.json (apply all with scope=global + contextual matching description)
 4. Load figma-api-rules.md (MANDATORY — read before writing any script)
+
+**In ALL cases:** Do NOT read guide files (design-patterns.md, color-usage.md, etc.) in quick mode. The bundle or registries contain everything needed.
 
 ### Step 2 — Gather intent (SKIP if brief provided)
 Ask the user exactly two things:
