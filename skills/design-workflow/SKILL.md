@@ -1,17 +1,18 @@
 ---
 name: design-workflow
 description: >
-  Spec-first workflow for designers who use Claude Code to design in Figma.
+  Compiler-driven design workflow for designers who use Claude Code to design in Figma.
   Covers components and full interfaces/screens. Use when a designer wants to:
-  (1) write or review a component or screen spec, (2) generate a Figma design via MCP,
-  (3) review and iterate on a design, (4) close or abandon work.
-  Triggers: "spec", "design", "screen", "review", "done", "drop", "learn", "sync",
-  "status", "setup", "quick", "express", "fast", "workflow", "what's next", "new component", "new screen", or any design request.
+  (1) make a new design (spec + compile + execute), (2) fix corrections and learn,
+  (3) ship a completed design, (4) set up the knowledge base, or (5) check status.
+  Triggers: "make", "design", "create", "build", "generate", "fix", "correct",
+  "learn", "done", "ship", "setup", "extract", "status", "drop", "abandon",
+  "new component", "new screen", or any design request.
 ---
 
-# Design Workflow
+# Design Workflow — v3 (Compiler-Driven)
 
-> Spec-first workflow for designers using Claude Code to design in Figma.
+> Compiler-driven, recipe-accelerated workflow for designers using Claude Code to design in Figma.
 > Powered by Figma MCP transport (console or official). See `references/transport-adapter.md`.
 > **All output in the user's language.**
 
@@ -19,143 +20,38 @@ description: >
 
 ## Philosophy
 
-1. **Spec-first** — No design without a validated specification
-2. **Figma is the output** — Everything ends as native Figma layers
+1. **Compiler-driven** — Claude produces a scene graph JSON; the compiler enforces all Figma API rules
+2. **Recipe-accelerated** — Proven layouts are captured as parameterized templates and reused
 3. **DS-native** — Every visual element uses design system tokens and components, never hardcoded
-4. **Composability over configuration** — Simple building blocks > mega-components
-5. **Iterative** — Design → review → refine until right
-6. **Atomic** — Small sequential scripts with visual verification between each step
+4. **CSpec-first** — Structured YAML specs that translate directly to scene graphs
+5. **Iterative** — Make, fix, learn, ship
+6. **Minimal context** — Only load what is needed for the current action (no bloated reads)
 
 ---
 
 ## Knowledge Base Location
 
 The knowledge base is project-specific. Resolve its path in this order:
-1. If `./bridge-ds/knowledge-base/registries/` exists and contains JSON files → use `./bridge-ds/knowledge-base/`
-2. Else if `./.claude/skills/design-workflow/references/knowledge-base/registries/` exists and contains JSON files → use that path
-3. Else → knowledge base not found. Suggest running `/design-workflow setup` to extract the DS.
+1. If `./bridge-ds/knowledge-base/registries/` exists and contains JSON files -> use `./bridge-ds/knowledge-base/`
+2. Else if `./.claude/skills/design-workflow/references/knowledge-base/registries/` exists and contains JSON files -> use that path
+3. Else -> knowledge base not found. Suggest running `setup` to extract the DS.
 
 The `specs/` directory is always at `./specs/` (project root), regardless of KB location.
 The `learnings.json` is always inside the knowledge base directory.
+The `recipes/` directory is always inside the knowledge base directory.
 
 ---
 
 ## Commands
 
-| Command | Purpose | Action file |
-|---------|---------|-------------|
-| `setup` | Extract DS + build knowledge base | `references/onboarding.md` (STEP 0) |
-| `spec {name}` | Write a component or screen specification | `references/actions/spec.md` |
-| `design` | Generate Figma design from active spec | `references/actions/design.md` |
-| `review` | Validate design against spec, tokens, and visual fidelity | `references/actions/review.md` |
-| `done` | Archive spec and close | `references/actions/done.md` |
-| `drop` | Abandon with preserved learnings | `references/actions/drop.md` |
-| `learn` | Diff design vs corrections, extract learnings | `references/actions/learn.md` |
-| `sync` | Incremental DS sync (no full re-setup) | `references/actions/sync.md` |
-| `status` | Show current state and suggest next action | *(inline below)* |
-| `quick {description}` | Express generation — skip spec, generate directly | `references/actions/quick.md` |
-| `express {description}` | Alias for quick | `references/actions/quick.md` |
-| `fast {description}` | Alias for quick | `references/actions/quick.md` |
-
----
-
-### Express Mode
-For rapid generation without formal specs, use `quick`. Requires an existing knowledge base.
-Full quality gates still apply for DS compliance and token binding.
-See `references/actions/quick.md`.
-
----
-
-## Two Modes
-
-### Component mode
-Design system components (Button, Card, Modal...):
-```
-spec {component}  →  design  →  review  →  done
-```
-Spec includes: architecture, props API, variants, tokens, Figma link.
-
-### Screen mode
-Full interfaces (dashboard, settings, onboarding...):
-```
-spec {screen}
-  → if new DS components identified:
-      spec {component}  →  design {component}  →  done {component}
-  → design {screen}  →  review  →  done
-```
-Spec includes: layout, sections, components used, content structure, responsive rules.
-**If the spec identifies UI patterns not covered by existing DS components**, they are flagged as new components. Each new component gets its own spec → design → done cycle before the screen design proceeds.
-
-The `spec` action auto-detects the mode from context, or asks the user.
-
----
-
-## Full Workflow
-
-```
-setup (first time only)
-  → Extract DS via Figma MCP transport
-  → Build knowledge base (registries + guides)
-  ↓
-spec {name}
-  │
-  ├─ [screen mode] → new components check
-  │     └─ spec {component} → design → done → back to screen
-  │
-  ▼
-design
-  │
-  ├─ STEP A: Pattern Matching ← BLOCKING
-  │     1. Identify screen type
-  │     2. Load design-patterns.md
-  │     3. Read min 2 reference screenshots
-  │     4. Extract: layout zones, proportions, density, hierarchy
-  │     5. Gate: pattern matched and documented
-  │
-  ├─ STEP B: Atomic Generation via figma_execute
-  │     1. Split into small sequential scripts (~30-80 lines each)
-  │     2. After each step: verify with figma_take_screenshot
-  │     3. Fix issues before proceeding to next step
-  │     4. Generate states (clone + modify)
-  │
-  ▼
-review
-  │
-  ├─ Structural review (spec compliance, tokens, completeness)
-  │
-  ├─ Visual fidelity review ← BLOCKING
-  │     1. Compare with reference screenshots
-  │     2. Check: layout, density, hierarchy, card patterns, navigation
-  │     3. Verdict: PASS / FAIL with identified gaps
-  │
-  ▼
-(optional) user corrects in Figma
-  │
-  ▼
-learn (optional, repeatable)
-  │
-  ├─ Diff snapshot vs current Figma state
-  ├─ Classify: DS-compliant → learning | hardcoded → flag
-  ├─ Persist to learnings.json
-  └─ Update spec with corrections
-  │
-  ▼
-done
-  │
-  ├─ Persist learnings
-  ├─ Archive spec
-  └─ Cleanup snapshot
-
-───────────────────────────────
-
-sync (independent, anytime)
-  │
-  ├─ Re-extract DS via MCP
-  ├─ Diff vs current registries
-  ├─ Report: +added, ~modified, -removed
-  ├─ Breaking change analysis
-  └─ Update registries + patch guides
-```
+| Command | Action File | Purpose |
+|---------|-------------|---------|
+| `make <description>` | `references/actions/make.md` | Spec + generate + verify (unified flow) |
+| `fix` | `references/actions/fix.md` | Diff corrections, learn, iterate |
+| `done` | `references/actions/done.md` | Archive, recipe extraction, ship |
+| `setup` | `references/actions/setup.md` | DS extraction + KB build |
+| `status` | *(inline below)* | Show current state |
+| `drop` | `references/actions/drop.md` | Abandon with preserved learnings |
 
 ---
 
@@ -165,16 +61,89 @@ Detect intent from user input and **read the action file BEFORE executing**:
 
 | User says | Route to |
 |-----------|----------|
-| "setup", "extract DS", "build knowledge base", "onboard" | `references/onboarding.md` (STEP 0) |
-| "spec", "write spec", "new component", "new screen" | `references/actions/spec.md` |
-| "design", "figma", "generate", "push to figma" | `references/actions/design.md` |
-| "review", "check", "validate", "audit" | `references/actions/review.md` |
-| "done", "finish", "complete", "close", "ship" | `references/actions/done.md` |
-| "drop", "abandon", "cancel" | `references/actions/drop.md` |
-| "learn", "diff", "corrections", "what changed" | `references/actions/learn.md` |
-| "sync", "update DS", "refresh DS", "sync DS" | `references/actions/sync.md` |
+| "make", "design", "create", "build", "generate", "new component", "new screen" | `references/actions/make.md` |
+| "fix", "correct", "learn", "diff", "corrections", "what changed", "I adjusted" | `references/actions/fix.md` |
+| "done", "ship", "ship it", "finish", "complete", "close" | `references/actions/done.md` |
+| "setup", "extract", "extract DS", "build knowledge base", "onboard" | `references/actions/setup.md` |
 | "status", "workflow", "what's next", "what now" | *(status logic below)* |
-| "quick", "express", "fast", "quick design", "just design" | `references/actions/quick.md` |
+| "drop", "abandon", "cancel" | `references/actions/drop.md` |
+
+---
+
+## Context Loading Rules (CRITICAL)
+
+**Load MINIMAL context per action.** Only these references are needed:
+
+| Action | Required references |
+|--------|--------------------|
+| **make** | `compiler-reference.md` + `transport-adapter.md` + `actions/make.md` |
+| **fix** | `transport-adapter.md` + `actions/fix.md` |
+| **done** | `actions/done.md` |
+| **setup** | `transport-adapter.md` + `actions/setup.md` |
+| **drop** | `actions/drop.md` |
+
+**NEVER load `figma-api-rules.md`.** The compiler enforces all 26 rules. Claude's job is to produce valid scene graph JSON, not write raw Figma Plugin API code.
+
+---
+
+## Full Workflow
+
+```
+setup (first time only)
+  -> Extract DS via Figma MCP transport
+  -> Build knowledge base (registries + guides + recipes index)
+  |
+make <description>
+  |
+  +-- Phase A: Context (load registry index, learnings, recipes)
+  +-- Phase B: Recipe Match (score against index)
+  +-- Phase C: CSpec (generate YAML, apply learnings, user validates)
+  +-- Phase D: Compile + Execute (JSON scene graph -> compiler -> Figma)
+  +-- Phase E: Present (screenshot, report, offer next step)
+  |
+  +-- Iteration loop:
+  |     User describes changes -> modify scene graph -> recompile -> re-execute
+  |     User says "I adjusted in Figma" -> fix flow
+  |     User says "done" / "ship it" -> done flow
+  |
+fix
+  |
+  +-- Re-read Figma state
+  +-- Diff snapshot vs current
+  +-- Classify: LEARNING (DS token) vs FLAG (hardcoded)
+  +-- Save learnings, patch recipes
+  +-- Offer: continue or done
+  |
+done
+  |
+  +-- Auto-fix if changes detected
+  +-- Archive spec
+  +-- Recipe extraction (if eligible)
+  +-- Update history
+```
+
+---
+
+## Two Modes
+
+### Component mode
+Design system components (Button, Card, Modal...):
+```
+make {component} -> fix (optional) -> done
+```
+CSpec uses `component-cspec.yaml` template. Includes: variants, props API, tokens.
+
+### Screen mode
+Full interfaces (dashboard, settings, onboarding...):
+```
+make {screen}
+  -> if new DS components needed:
+      make {component} -> done -> back to screen
+  -> fix (optional) -> done
+```
+CSpec uses `screen-cspec.yaml` template. Includes: layout tree, sections, DS components used.
+
+The `make` action auto-detects the mode from context, or asks the user.
 
 ---
 
@@ -182,11 +151,17 @@ Detect intent from user input and **read the action file BEFORE executing**:
 
 ```
 specs/
-  active/          ← Current work (0-1 specs)
-  backlog/         ← Queued specs
-  shipped/         ← Completed & archived
-  dropped/         ← Abandoned with learnings
-  history.log      ← One-line per design shipped
+  active/          <- Current work (0-1 CSpecs + snapshots)
+  backlog/         <- Queued specs
+  shipped/         <- Completed & archived
+  dropped/         <- Abandoned with learnings
+  history.log      <- One-line per design shipped
+
+knowledge-base/
+  registries/      <- components.json, variables.json, text-styles.json, icons.json, ...
+  guides/          <- tokens/, components/, patterns/, assets/
+  recipes/         <- _index.json + individual recipe JSON files
+  learnings.json   <- Accumulated design preferences
 ```
 
 ---
@@ -194,18 +169,17 @@ specs/
 ## Status Logic (inline)
 
 Detect state by checking:
-1. Does the knowledge base exist? (`references/knowledge-base/registries/` has JSON files)
-2. Does `specs/active/` contain a spec?
-3. Has a Figma design been generated for it?
+1. Does the knowledge base exist? (registries/ has JSON files)
+2. Does `specs/active/` contain a CSpec?
+3. Has a Figma design been generated for it? (snapshot file exists)
 
 | State | Suggestion |
 |-------|------------|
 | No knowledge base | "Run: `setup` to extract and document your DS" |
-| No spec | "Ready. Run: `spec {name}`" |
-| Active spec, no Figma design | "Spec ready. Run: `design`" |
-| Active spec + Figma done | "Design ready. Run: `review`" |
-| Review passed | "Run: `done` (or `learn` if you made manual corrections)" |
-| DS may be outdated | "Run: `sync` to update registries from Figma" |
+| No active CSpec | "Ready. Run: `make <description>`" |
+| Active CSpec, no snapshot | "CSpec ready but not yet compiled. Run: `make` to continue" |
+| Active CSpec + snapshot | "Design generated. Try it in Figma, then: `fix` or `done`" |
+| DS may be outdated | "Run: `setup` to refresh registries from Figma" |
 
 ---
 
@@ -215,16 +189,15 @@ Full definitions: `references/quality-gates.md` (read before any phase transitio
 
 ---
 
-## Guided Mode (DEFAULT)
+## Non-Negotiable Rules
 
-**Read `references/onboarding.md` BEFORE any action.** It defines the step-by-step flow with blocking gates.
-
-**Non-negotiable rules:**
-- NEVER skip spec creation, validation, or new components check
-- NEVER skip pattern matching (no design without studying screenshots)
 - ALWAYS read the action file BEFORE executing
-- ALWAYS read `references/figma-api-rules.md` BEFORE writing any Figma script
-- ALWAYS wait for user confirmation before generating in Figma
+- ALWAYS read `compiler-reference.md` before producing any scene graph JSON
+- ALWAYS read `transport-adapter.md` before any MCP tool call
+- ALWAYS wait for user confirmation before compiling and executing in Figma
+- NEVER load `figma-api-rules.md` — the compiler handles all Figma API rules
+- NEVER write raw Plugin API scripts manually — always go through the compiler
+- NEVER skip CSpec validation or user confirmation
 
 ---
 
@@ -232,14 +205,12 @@ Full definitions: `references/quality-gates.md` (read before any phase transitio
 
 | Reference | Path |
 |-----------|------|
+| Compiler reference | `references/compiler-reference.md` |
 | Transport adapter | `references/transport-adapter.md` |
 | Quality gates | `references/quality-gates.md` |
-| Figma API rules | `references/figma-api-rules.md` |
-| Onboarding flow | `references/onboarding.md` |
-| Spec template (component) | `references/templates/spec-template.md` |
-| Spec template (screen) | `references/templates/screen-template.md` |
-| Design patterns | `references/knowledge-base/guides/design-patterns.md` |
-| UI reference screenshots | `references/knowledge-base/ui-references/screenshots/` |
+| CSpec template (screen) | `references/templates/screen-cspec.yaml` |
+| CSpec template (component) | `references/templates/component-cspec.yaml` |
+| Recipe system | `references/knowledge-base/recipes/README.md` |
 
 ---
 

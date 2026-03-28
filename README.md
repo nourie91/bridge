@@ -1,24 +1,26 @@
 # Bridge DS
 
-AI-powered design generation in Figma — 100% design system compliant.
+Compiler-driven design generation for Figma — 100% design system compliant.
 
-Bridge turns [Claude Code](https://claude.ai/download) into a designer that knows your design system inside out. It extracts, documents, and uses your real Figma components, tokens, and text styles to generate production-ready designs.
+Bridge turns [Claude Code](https://claude.ai/download) into a designer that knows your design system inside out. Instead of writing raw Figma Plugin API scripts, Claude produces declarative scene graph JSON with token references. A local compiler resolves tokens, validates structure, enforces all Figma API rules, and generates correct executable code — then executes it in Figma via MCP.
+
+The result: production-ready Figma designs that use your real components, bound variables, and text styles. Zero hardcoded values.
+
+## Architecture
 
 ```
 You describe what you want
   → Claude consults the knowledge base (your DS, documented)
-  → Claude writes the spec (exact components, tokens, layout)
-  → Claude generates in Figma (real DS components, bound variables)
-  → You review in Figma
-  → Claude learns from your corrections (and improves next time)
+  → Claude writes a CSpec (structured YAML specification)
+  → Claude converts CSpec to a scene graph JSON
+  → Compiler resolves tokens, validates, generates code
+  → Code executes in Figma via MCP
+  → You review, iterate, ship
 ```
 
-## How it works
-
-Bridge is two things:
-
-1. **A CLI** (`bridge-ds init`) that scaffolds your project with the design workflow skill
-2. **A Claude Code skill** (`/design-workflow`) that handles the intelligence — spec writing, DS knowledge, Figma generation
+```
+Claude Code ──CSpec YAML──> Scene Graph JSON ──> Compiler ──Plugin API──> MCP ──> Figma
+```
 
 Bridge supports two MCP transports:
 
@@ -48,12 +50,12 @@ claude mcp add figma-console -s user \
   -- npx -y figma-console-mcp@latest
 ```
 
-Get your token from [Figma Settings → Personal access tokens](https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens).
+Get your token from [Figma Settings > Personal access tokens](https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens).
 
 ### 2. Connect Figma Desktop
 
 1. Run `npx figma-console-mcp@latest --print-path` to find the plugin directory
-2. In Figma Desktop: **Plugins → Development → Import plugin from manifest...**
+2. In Figma Desktop: **Plugins > Development > Import plugin from manifest...**
 3. Select `figma-desktop-bridge/manifest.json`
 4. Run the plugin in your Figma file
 
@@ -65,7 +67,7 @@ npx @noemuch/bridge-ds init
 ```
 
 This scaffolds:
-- `.claude/skills/design-workflow/` — the workflow skill + references
+- `.claude/skills/design-workflow/` — the workflow skill + references + compiler
 - `.claude/commands/design-workflow.md` — the `/design-workflow` slash command
 - `specs/` — directory for active, shipped, and dropped specs
 
@@ -77,85 +79,93 @@ Open Claude Code in your project:
 /design-workflow setup
 ```
 
-Claude will:
-1. Extract your entire DS from Figma (`figma_get_design_system_kit`)
-2. Analyze every component, token, and style
-3. Generate intelligent guides (when to use what, decision trees, pattern catalog)
-4. Ask for product screenshots to document layout patterns
+Claude will extract your entire DS from Figma, analyze every component, token, and style, and generate intelligent guides and a recipe index.
 
 ### 5. Start designing
 
 ```
-/design-workflow spec a settings page for account information
+/design-workflow make a settings page for account information
 ```
 
-Claude consults the knowledge base, identifies the right pattern, components, and tokens, and writes a complete spec. Then:
+Claude consults the knowledge base, matches recipes, generates a CSpec, compiles it to a scene graph, and executes it in Figma. Then:
 
 ```
-/design-workflow design    # Generate in Figma (atomic, verified)
-/design-workflow review    # Validate against spec
-/design-workflow done      # Archive and ship
-```
-
-## The Workflow
-
-```
-setup (once)  →  spec  →  design  →  review  ──→  done
-                   ↑                    |             |
-                   └── iterate ─────────┘       learn ←┘
-                                           (diff corrections,
-                                            extract preferences)
-```
-
-### Express mode
-For quick iterations, skip the formal spec: `/design-workflow quick "a settings page"`. 2 questions max, inline mini-spec, same DS quality guarantees.
-
-### Spec-first
-No design without a validated specification. Claude knows exactly which components, tokens, and layout patterns to use because it has your DS documented.
-
-### Atomic generation
-Designs are generated in 4-6 small sequential scripts (~30-80 lines each). After each step, Claude takes a screenshot and verifies before continuing. Bug in step 3? Fix and re-run step 3 only.
-
-### DS-native
-Zero hardcoded hex colors. Zero recreated components. Everything imported from your library via `importComponentByKeyAsync`, bound to variables via `setBoundVariableForPaint`.
-
-### Quality gates
-Blocking checks at every phase transition: spec validation, pattern matching, pre-script element audit, visual fidelity review, DS component reuse audit.
-
-## Knowledge Base
-
-The knowledge base is what makes Bridge different from "just executing Figma scripts". During setup, Claude builds a complete understanding of your DS:
-
-```
-knowledge-base/
-  registries/          ← Raw DS data (components, variables, text styles)
-  guides/
-    design-patterns.md ← Layout patterns from your product screenshots
-    tokens/            ← When to use which color, spacing, typography
-    components/        ← Decision tree: "I need X" → use component Y
-    patterns/          ← Form, navigation, feedback, multi-step patterns
-    assets/            ← Icons, logos, illustrations catalog
-  ui-references/       ← Product screenshots for pattern extraction
+- Describe changes -> Claude modifies and recompiles
+- "I adjusted in Figma" -> triggers fix flow (diff + learn)
+- "done" / "ship it" -> triggers done flow (archive + recipe extraction)
 ```
 
 ## Commands
 
-| Command | What it does |
-|---------|-------------|
+| Command | Purpose |
+|---------|---------|
+| `/design-workflow make <description>` | Spec + compile + execute + verify (unified flow) |
+| `/design-workflow fix` | Diff Figma corrections, extract learnings, iterate |
+| `/design-workflow done` | Archive spec, extract recipes, ship |
 | `/design-workflow setup` | Extract DS + build knowledge base |
-| `/design-workflow spec {name}` | Write a component or screen spec |
-| `/design-workflow design` | Generate in Figma from active spec |
-| `/design-workflow quick {description}` | Express generation — skip spec, generate directly |
-| `/design-workflow review` | Validate design against spec + tokens |
-| `/design-workflow done` | Archive spec and ship |
-| `/design-workflow drop` | Abandon with preserved learnings |
-| `/design-workflow learn` | Diff corrections, extract learnings |
-| `/design-workflow sync` | Incremental DS sync (no full re-setup) |
 | `/design-workflow status` | Show current state, suggest next action |
+| `/design-workflow drop` | Abandon with preserved learnings |
+
+## How It Works
+
+### CSpec (Compilable Specification)
+
+A structured YAML format that describes what to build: layout tree, components, tokens, variants. Human-readable and machine-parseable. Templates exist for screens and components.
+
+### Scene Graph Compiler
+
+The compiler (`lib/compiler/compile.js`) takes a declarative JSON scene graph with `$token` references and produces correct Figma Plugin API code:
+
+```bash
+node lib/compiler/compile.js --input scene.json --kb <kb-path> --transport <console|official>
+```
+
+Pipeline: `Parse > Resolve tokens > Validate structure > Plan chunks > Generate code > Wrap for transport`
+
+The compiler enforces all 26 Figma API rules automatically (FILL after appendChild, resize before sizing, setBoundVariableForPaint, etc.). Claude never needs to remember them.
+
+### Recipe System
+
+Recipes are pre-built scene graph templates stored in `knowledge-base/recipes/`. When a user requests a design, recipes are scored by archetype match, tag overlap, structural similarity, and confidence. High-scoring recipes pre-fill the CSpec, accelerating generation.
+
+Recipes evolve: the `fix` and `done` flows extract learnings and patch recipes based on user corrections.
+
+### Knowledge Base
+
+```
+knowledge-base/
+  registries/      <- components.json, variables.json, text-styles.json, icons.json
+  guides/          <- tokens/, components/, patterns/, assets/
+  recipes/         <- _index.json + individual recipe JSON files
+  learnings.json   <- Accumulated design preferences
+```
+
+## v3.0 Highlights
+
+v3.0 is a complete architecture rewrite. Key changes from v2:
+
+- **Compiler-driven**: Claude produces scene graphs, the compiler writes Plugin API code. No more manual scripting.
+- **Unified `make` command**: Replaces the old `spec > design > review` cycle with a single continuous flow.
+- **CSpec format**: YAML-based compilable specs replace markdown templates.
+- **Recipe system**: Proven layouts captured as parameterized templates, reused and improved over time.
+- **`fix` command**: Snapshot diffing, learning extraction, recipe auto-patching.
+- **Compile-time validation**: Errors caught before Figma execution, with fuzzy suggestions.
+- **Removed**: `figma-api-rules.md`, `bundle.js`, old action files (`spec.md`, `design.md`, `review.md`, `quick.md`, `sync.md`, `learn.md`).
+
+See [CHANGELOG.md](CHANGELOG.md) for the full list.
+
+## Plugin Support
+
+Bridge DS works as a plugin for:
+
+- **Claude Code** — Native skill via `.claude/skills/`
+- **Cursor** — Plugin via `.cursor-plugin/`
+
+Both use the same MCP transport and compiler infrastructure.
 
 ## Author
 
-Built by [Noé Chagué](https://www.linkedin.com/in/noechague/) — Design System @ [Finary](https://finary.com)
+Built by [Noe Chague](https://www.linkedin.com/in/noechague/) — Design System @ [Finary](https://finary.com)
 
 ## License
 

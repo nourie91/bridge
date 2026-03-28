@@ -2,6 +2,34 @@
 
 All notable changes to Bridge DS are documented here.
 
+## [3.0.0] — 2026-03-28
+
+### Breaking
+- Complete architecture rewrite: compiler-driven generation replaces manual Plugin API scripting
+- Command restructure: `make`/`fix`/`done` replace `spec`/`design`/`review`/`quick`/`sync`/`learn`
+- Spec format: CSpec YAML replaces markdown templates
+- Removed: `figma-api-rules.md` (rules now enforced by compiler), `bundle.js`, old action files
+
+### Added
+- **Scene Graph Compiler** (`lib/compiler/`): declarative JSON to correct Figma Plugin API scripts
+  - 26 Figma API rules enforced automatically by code generation
+  - Token/component resolution with fuzzy error suggestions
+  - Multi-chunk support with globalThis bridging
+  - Transport-aware output (console IIFE vs official top-level await)
+  - Compile-time validation (catches errors before Figma execution)
+- **CSpec format**: YAML-based compilable specifications (human-readable + machine-parseable)
+- **Recipe system**: pre-built scene graph templates that evolve with user corrections
+- **Unified `make` command**: spec + design + review in one continuous flow
+- **`fix` command**: snapshot diff, learning extraction, recipe auto-patching
+- **Compiler reference**: concise 2.5K-token reference replaces 13K-token rules document
+
+### Removed
+- `figma-api-rules.md` — rules moved into compiler internals
+- `bundle.js` — replaced by compiler
+- `spec.md`, `design.md`, `review.md`, `quick.md`, `sync.md` — replaced by `make.md`
+- `spec-template.md`, `screen-template.md` — replaced by CSpec YAML templates
+- `onboarding.md` — replaced by `setup.md`
+
 ## [2.5.1] — 2026-03-25
 
 ### Added

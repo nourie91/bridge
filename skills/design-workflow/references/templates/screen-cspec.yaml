@@ -1,0 +1,387 @@
+# ============================================================================
+# Screen CSpec Template — Bridge DS v3
+# ============================================================================
+#
+# This YAML template defines a screen specification.
+# Claude fills this in during the `spec` phase, then converts the `layout`
+# tree to scene graph JSON during the `design` phase for the compiler.
+#
+# RULES:
+# - All colors, spacing, radius MUST be $token references (never raw values)
+# - DS components MUST be referenced by name (resolved to keys by compiler)
+# - Text MUST reference a $text/ style (never hardcode font properties)
+# - Use INSTANCE nodes for DS components, never recreate them as FRAMEs
+# - Use REPEAT for lists/grids with repeated structure
+# ============================================================================
+
+# --- Meta -------------------------------------------------------------------
+meta:
+  name: ""                    # Screen name, PascalCase (e.g. "SettingsPage")
+  type: screen                # Always "screen" for screen specs
+  canvas: web                 # Target canvas: web | mobile | tablet
+  width: 1440                 # Root frame width in px
+  height: 900                 # Root frame height in px
+  pattern: ""                 # Design pattern name (e.g. "sidebar-detail", "dashboard-grid")
+  recipe: ""                  # Optional: recipe name if using a predefined layout recipe
+  reference: ""               # Optional: Figma node ID of an existing screen to clone shell from
+
+# --- Intent -----------------------------------------------------------------
+intent: |
+  Describe the screen's purpose, user goal, and context of use.
+
+# --- Layout -----------------------------------------------------------------
+# Hierarchical layout tree. Each node maps directly to a scene graph node.
+#
+# Node types and their key fields:
+#   FRAME    — layout, gap, padding, fill, radius, stroke, children
+#   TEXT     — characters, textStyle, fill, autoResize, maxLines
+#   INSTANCE — component, variant, properties, swaps
+#   REPEAT   — count, data, template (children stamped N times)
+#   CLONE    — sourceRef or sourceNodeId, overrides
+#
+# Sizing:
+#   fillH: true   → layoutSizingHorizontal = "FILL" (stretch to parent width)
+#   fillV: true   → layoutSizingVertical = "FILL" (stretch to parent height)
+#   width/height  → fixed dimensions via resize()
+#
+# The compiler handles:
+#   - FILL applied after appendChild (Rule 1)
+#   - resize() before sizing modes (Rule 4)
+#   - Font loading from the fonts list (Rule 16)
+#   - setBoundVariableForPaint for colors (Rule 7)
+layout:
+  type: FRAME
+  name: Root
+  layout: HORIZONTAL          # Top-level layout direction
+  fill: "$color/bg/neutral/default"
+  fillH: true
+  fillV: true
+  children: []                # Populate with the screen's zone structure
+
+# --- States (optional) ------------------------------------------------------
+# Alternative states for the screen. Each state lists overrides to the
+# default (populated) layout above.
+#
+# Common states: empty, loading, error.
+# If not applicable, omit this section entirely.
+states:
+  empty:
+    description: ""           # What shows when no data is available
+    overrides: []             # List of { find: { name }, set: { ... } } overrides
+  loading:
+    description: ""           # Skeleton, spinner, etc.
+    overrides: []
+  error:
+    description: ""           # Error message, retry action
+    overrides: []
+
+# --- DS Components Used ------------------------------------------------------
+# All DS components referenced in the layout tree.
+# Helps verify that no component was missed or misnamed.
+ds_components:
+  - name: ""                  # Component name from registry (e.g. "Button")
+    variant: ""               # Variant used (e.g. "primary / large")
+    location: ""              # Section where it appears (e.g. "Header > Actions")
+
+# --- New DS Components Required ----------------------------------------------
+# UI patterns in this screen NOT covered by existing DS components.
+# Each one needs its own spec > design > done cycle BEFORE this screen.
+# If none, leave empty.
+new_components: []
+  # - name: ""
+  #   section: ""
+  #   description: ""
+  #   variants_needed: []
+
+# --- Tokens ------------------------------------------------------------------
+tokens:
+  spacing:
+    - token: "$spacing/lg"
+      usage: "Section padding"
+  colors:
+    - token: "$color/bg/neutral/default"
+      usage: "Page background"
+  typography:
+    - token: "$text/heading/xl/bold"
+      usage: "Page title"
+
+# --- Learnings ---------------------------------------------------------------
+# Auto-populated from knowledge-base/learnings.json during spec writing.
+learnings: []
+
+# --- Acceptance Criteria -----------------------------------------------------
+acceptance:
+  - "All sections match the layout structure"
+  - "All DS components used via INSTANCE (no recreated frames)"
+  - "All tokens correctly applied (no hardcoded values)"
+  - "Responsive: fillH/fillV used correctly for fluid zones"
+
+
+# ============================================================================
+# COMPLETE EXAMPLE: Settings Page (sidebar + content)
+# ============================================================================
+# Below is a filled-in example for reference. Delete everything below this
+# line when writing a real spec.
+# ============================================================================
+
+# meta:
+#   name: SettingsPage
+#   type: screen
+#   canvas: web
+#   width: 1440
+#   height: 900
+#   pattern: sidebar-detail
+#   recipe: ""
+#   reference: "1234:5678"        # Node ID of an existing screen with same shell
+#
+# intent: |
+#   Application settings page. The user navigates setting categories in a
+#   sidebar and edits preferences in the main content area. Follows the
+#   sidebar-detail pattern: fixed-width sidebar on the left, scrollable
+#   content on the right.
+#
+# layout:
+#   type: FRAME
+#   name: SettingsPage
+#   layout: HORIZONTAL
+#   fill: "$color/bg/neutral/default"
+#   fillH: true
+#   fillV: true
+#   children:
+#
+#     # ── Sidebar ──────────────────────────────────────────────────
+#     - type: FRAME
+#       name: Sidebar
+#       layout: VERTICAL
+#       width: 280
+#       fillV: true
+#       padding: "$spacing/lg"
+#       gap: "$spacing/xs"
+#       fill: "$color/bg/neutral/subtle"
+#       stroke: "$color/border/neutral/default"
+#       strokeWeight: 1
+#       strokeAlign: INSIDE
+#       children:
+#         - type: TEXT
+#           name: SidebarTitle
+#           characters: "Settings"
+#           textStyle: "$text/heading/md/bold"
+#           fill: "$color/text/neutral/default"
+#
+#         # Navigation items — repeated from data
+#         - type: REPEAT
+#           name: NavItems
+#           count: 5
+#           data:
+#             - label: "General"
+#               icon: "settings"
+#             - label: "Notifications"
+#               icon: "bell"
+#             - label: "Security"
+#               icon: "shield"
+#             - label: "Billing"
+#               icon: "credit-card"
+#             - label: "Integrations"
+#               icon: "puzzle"
+#           template:
+#             - type: INSTANCE
+#               name: NavItem
+#               component: ListItem
+#               variant: { size: "md" }
+#               properties: { label: "{{label}}" }
+#               swaps: { leadingIcon: "{{icon}}" }
+#               fillH: true
+#
+#     # ── Content Area ─────────────────────────────────────────────
+#     - type: FRAME
+#       name: ContentArea
+#       layout: VERTICAL
+#       fillH: true
+#       fillV: true
+#       padding: "$spacing/xl"
+#       gap: "$spacing/xl"
+#       children:
+#
+#         # Header
+#         - type: FRAME
+#           name: ContentHeader
+#           layout: HORIZONTAL
+#           fillH: true
+#           counterAxisAlign: CENTER
+#           gap: "$spacing/md"
+#           children:
+#             - type: TEXT
+#               name: PageTitle
+#               characters: "General Settings"
+#               textStyle: "$text/heading/xl/bold"
+#               fill: "$color/text/neutral/default"
+#               fillH: true
+#             - type: INSTANCE
+#               name: SaveButton
+#               component: Button
+#               variant: { variant: "primary", size: "md" }
+#               properties: { label: "Save changes" }
+#
+#         # Divider
+#         - type: RECTANGLE
+#           name: Divider
+#           width: 100
+#           height: 1
+#           fill: "$color/border/neutral/default"
+#           fillH: true
+#
+#         # Settings sections
+#         - type: FRAME
+#           name: ProfileSection
+#           layout: VERTICAL
+#           fillH: true
+#           gap: "$spacing/md"
+#           children:
+#             - type: TEXT
+#               name: SectionTitle
+#               characters: "Profile"
+#               textStyle: "$text/heading/sm/bold"
+#               fill: "$color/text/neutral/default"
+#
+#             - type: FRAME
+#               name: FieldGroup
+#               layout: VERTICAL
+#               fillH: true
+#               gap: "$spacing/sm"
+#               children:
+#                 - type: INSTANCE
+#                   name: DisplayNameField
+#                   component: TextInput
+#                   variant: { size: "md" }
+#                   properties: { label: "Display name", value: "Jane Doe", placeholder: "Enter your name" }
+#                   fillH: true
+#                 - type: INSTANCE
+#                   name: EmailField
+#                   component: TextInput
+#                   variant: { size: "md" }
+#                   properties: { label: "Email", value: "jane@acme.com", placeholder: "Enter your email" }
+#                   fillH: true
+#
+#         - type: FRAME
+#           name: PreferencesSection
+#           layout: VERTICAL
+#           fillH: true
+#           gap: "$spacing/md"
+#           children:
+#             - type: TEXT
+#               name: SectionTitle2
+#               characters: "Preferences"
+#               textStyle: "$text/heading/sm/bold"
+#               fill: "$color/text/neutral/default"
+#
+#             - type: FRAME
+#               name: ToggleGroup
+#               layout: VERTICAL
+#               fillH: true
+#               gap: "$spacing/sm"
+#               children:
+#                 - type: FRAME
+#                   name: DarkModeRow
+#                   layout: HORIZONTAL
+#                   fillH: true
+#                   counterAxisAlign: CENTER
+#                   gap: "$spacing/md"
+#                   children:
+#                     - type: TEXT
+#                       name: DarkModeLabel
+#                       characters: "Dark mode"
+#                       textStyle: "$text/body/md/regular"
+#                       fill: "$color/text/neutral/default"
+#                       fillH: true
+#                     - type: INSTANCE
+#                       name: DarkModeToggle
+#                       component: Toggle
+#                       variant: { size: "md" }
+#                       properties: { enabled: true }
+#
+#                 - type: FRAME
+#                   name: NotificationsRow
+#                   layout: HORIZONTAL
+#                   fillH: true
+#                   counterAxisAlign: CENTER
+#                   gap: "$spacing/md"
+#                   children:
+#                     - type: TEXT
+#                       name: NotificationsLabel
+#                       characters: "Email notifications"
+#                       textStyle: "$text/body/md/regular"
+#                       fill: "$color/text/neutral/default"
+#                       fillH: true
+#                     - type: INSTANCE
+#                       name: NotificationsToggle
+#                       component: Toggle
+#                       variant: { size: "md" }
+#                       properties: { enabled: false }
+#
+# states:
+#   loading:
+#     description: "Skeleton placeholders in content area while settings load"
+#     overrides:
+#       - find: { name: FieldGroup }
+#         set: { opacity: 0.4 }
+#       - find: { name: ToggleGroup }
+#         set: { opacity: 0.4 }
+#   error:
+#     description: "Error banner at top of content area with retry action"
+#     overrides: []
+#
+# ds_components:
+#   - name: ListItem
+#     variant: "md"
+#     location: "Sidebar > NavItems"
+#   - name: Button
+#     variant: "primary / md"
+#     location: "ContentHeader > SaveButton"
+#   - name: TextInput
+#     variant: "md"
+#     location: "ProfileSection > FieldGroup"
+#   - name: Toggle
+#     variant: "md"
+#     location: "PreferencesSection > ToggleGroup"
+#
+# new_components: []
+#
+# tokens:
+#   spacing:
+#     - token: "$spacing/xs"
+#       usage: "Sidebar nav item gap"
+#     - token: "$spacing/sm"
+#       usage: "Form field gap"
+#     - token: "$spacing/md"
+#       usage: "Section internal gap, row gap"
+#     - token: "$spacing/lg"
+#       usage: "Sidebar padding"
+#     - token: "$spacing/xl"
+#       usage: "Content area padding, section gap"
+#   colors:
+#     - token: "$color/bg/neutral/default"
+#       usage: "Page background"
+#     - token: "$color/bg/neutral/subtle"
+#       usage: "Sidebar background"
+#     - token: "$color/border/neutral/default"
+#       usage: "Sidebar border, divider"
+#     - token: "$color/text/neutral/default"
+#       usage: "All text"
+#   typography:
+#     - token: "$text/heading/xl/bold"
+#       usage: "Page title"
+#     - token: "$text/heading/md/bold"
+#       usage: "Sidebar title"
+#     - token: "$text/heading/sm/bold"
+#       usage: "Section titles"
+#     - token: "$text/body/md/regular"
+#       usage: "Toggle row labels"
+#
+# learnings: []
+#
+# acceptance:
+#   - "Sidebar is fixed 280px wide, content area fills remaining space"
+#   - "All 5 nav items rendered via REPEAT with correct icons"
+#   - "TextInput and Toggle instances use DS components (no raw frames)"
+#   - "All tokens correctly applied (no hardcoded values)"
+#   - "Divider uses RECTANGLE (no DS equivalent) with fill token"

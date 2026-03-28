@@ -1,0 +1,248 @@
+# ============================================================================
+# Component CSpec Template — Bridge DS v3
+# ============================================================================
+#
+# This YAML template defines a component specification.
+# Claude fills this in during the `spec` phase, then converts it to
+# scene graph JSON during the `design` phase for the compiler.
+#
+# RULES:
+# - All colors, spacing, radius MUST be $token references (never raw values)
+# - DS components MUST be referenced by name (resolved to keys by compiler)
+# - Text MUST reference a $text/ style (never hardcode font properties)
+# ============================================================================
+
+# --- Meta -------------------------------------------------------------------
+# Identifies the spec and its target.
+meta:
+  name: ""                    # Component name, PascalCase (e.g. "StatusBadge")
+  type: component             # Always "component" for component specs
+  canvas: web                 # Target canvas: web | mobile | tablet
+
+# --- Intent -----------------------------------------------------------------
+# One-paragraph description of the component's purpose and design rationale.
+intent: |
+  Describe what this component is, when it is used, and what design
+  principle it follows.
+
+# --- Variants ---------------------------------------------------------------
+# Each variant is a combination of component property values.
+# "base" defines shared structure. Each variant entry provides overrides.
+#
+# Maps to scene graph: each variant becomes a separate INSTANCE or FRAME node
+# inside a COMPONENT_SET with the variant properties defined below.
+variants:
+  # Variant properties define the axes of variation.
+  # Each property becomes a Figma component property on the component set.
+  properties:
+    - name: ""                # Property name (e.g. "status")
+      values: []              # Possible values (e.g. ["success", "warning", "error"])
+      default: ""             # Default value
+
+  # Base defines the shared layout tree for ALL variants.
+  # Uses the same node vocabulary as the scene graph (FRAME, TEXT, INSTANCE, etc.)
+  base:
+    type: FRAME
+    layout: HORIZONTAL        # HORIZONTAL | VERTICAL | NONE
+    gap: "$spacing/xs"        # Token ref for gap between children
+    padding: "$spacing/sm"    # Token ref for padding (all sides)
+    counterAxisAlign: CENTER  # MIN | CENTER | MAX
+    fill: "$color/bg/neutral/subtle"
+    radius: "$radius/sm"
+    children:
+      - type: TEXT
+        name: Label
+        characters: "Label"   # Default text content
+        textStyle: "$text/label/sm/medium"
+        fill: "$color/text/neutral/default"
+
+  # Each entry in the list is one variant combination.
+  # Only specify fields that DIFFER from base.
+  items:
+    - name: ""                # Human-readable variant name (e.g. "Success")
+      set:                    # Property values that identify this variant
+        status: ""            # e.g. "success"
+      overrides:              # Visual overrides vs base
+        fill: ""              # e.g. "$color/bg/success/subtle"
+        children:
+          - find: { name: Label }
+            set:
+              fill: ""        # e.g. "$color/text/success/default"
+
+# --- Properties --------------------------------------------------------------
+# Figma component properties exposed to consumers.
+# Each property maps to one of three types: TEXT, BOOLEAN, INSTANCE_SWAP.
+#
+# Maps to scene graph: INSTANCE nodes use `properties` and `swaps` to set these.
+properties:
+  - name: ""                  # Property name (e.g. "label")
+    type: TEXT                # TEXT | BOOLEAN | INSTANCE_SWAP
+    default: ""               # Default value (string for TEXT, true/false for BOOLEAN)
+    description: ""           # What this property controls
+
+# --- Tokens ------------------------------------------------------------------
+# Summary of all tokens used by this component.
+# Helps the reviewer verify that no raw values slipped through.
+tokens:
+  spacing:
+    - token: "$spacing/sm"
+      usage: "Container padding"
+    - token: "$spacing/xs"
+      usage: "Gap between icon and label"
+  colors:
+    - token: "$color/bg/neutral/subtle"
+      usage: "Default background"
+    - token: "$color/text/neutral/default"
+      usage: "Default label color"
+  radius:
+    - token: "$radius/sm"
+      usage: "Container corners"
+  typography:
+    - token: "$text/label/sm/medium"
+      usage: "Label text"
+
+# --- DS Components Used ------------------------------------------------------
+# Existing DS components consumed by this component.
+# Each entry becomes an INSTANCE node in the scene graph.
+ds_components:
+  - name: ""                  # Component name from registry (e.g. "Icon")
+    usage: ""                 # Where in the component it appears
+
+# --- Learnings ---------------------------------------------------------------
+# Auto-populated from knowledge-base/learnings.json during spec writing.
+# If none apply, leave empty.
+learnings: []
+  # - rule: "Rule text"
+  #   scope: global           # global | contextual
+  #   signals: 3
+
+# --- Acceptance Criteria -----------------------------------------------------
+acceptance:
+  - "All variants exist as component variants in the component set"
+  - "All tokens correctly applied (no hardcoded values)"
+  - "Component properties exposed (TEXT, BOOLEAN, INSTANCE_SWAP)"
+
+
+# ============================================================================
+# COMPLETE EXAMPLE: StatusBadge
+# ============================================================================
+# Below is a filled-in example for reference. Delete everything below this
+# line when writing a real spec.
+# ============================================================================
+
+# meta:
+#   name: StatusBadge
+#   type: component
+#   canvas: web
+#
+# intent: |
+#   A small inline badge that communicates the status of an item (success,
+#   warning, error). Used in tables, cards, and list rows. Follows the
+#   "minimal surface" principle: tinted background + matching text, no border.
+#
+# variants:
+#   properties:
+#     - name: status
+#       values: [success, warning, error]
+#       default: success
+#
+#   base:
+#     type: FRAME
+#     layout: HORIZONTAL
+#     gap: "$spacing/xs"
+#     padding: "$spacing/xs $spacing/sm"      # Asymmetric: vertical xs, horizontal sm
+#     counterAxisAlign: CENTER
+#     fill: "$color/bg/success/subtle"
+#     radius: "$radius/full"
+#     children:
+#       - type: INSTANCE
+#         name: StatusIcon
+#         component: Icon
+#         properties: { name: "check-circle", size: "sm" }
+#       - type: TEXT
+#         name: Label
+#         characters: "Success"
+#         textStyle: "$text/label/xs/medium"
+#         fill: "$color/text/success/default"
+#
+#   items:
+#     - name: Success
+#       set:
+#         status: success
+#       overrides: {}          # Base IS the success variant
+#
+#     - name: Warning
+#       set:
+#         status: warning
+#       overrides:
+#         fill: "$color/bg/warning/subtle"
+#         children:
+#           - find: { name: StatusIcon }
+#             set:
+#               properties: { name: "alert-triangle" }
+#           - find: { name: Label }
+#             set:
+#               characters: "Warning"
+#               fill: "$color/text/warning/default"
+#
+#     - name: Error
+#       set:
+#         status: error
+#       overrides:
+#         fill: "$color/bg/error/subtle"
+#         children:
+#           - find: { name: StatusIcon }
+#             set:
+#               properties: { name: "x-circle" }
+#           - find: { name: Label }
+#             set:
+#               characters: "Error"
+#               fill: "$color/text/error/default"
+#
+# properties:
+#   - name: label
+#     type: TEXT
+#     default: "Status"
+#     description: "The status text displayed in the badge"
+#   - name: hasIcon
+#     type: BOOLEAN
+#     default: true
+#     description: "Show or hide the leading status icon"
+#
+# tokens:
+#   spacing:
+#     - token: "$spacing/xs"
+#       usage: "Vertical padding, gap between icon and label"
+#     - token: "$spacing/sm"
+#       usage: "Horizontal padding"
+#   colors:
+#     - token: "$color/bg/success/subtle"
+#       usage: "Success variant background"
+#     - token: "$color/bg/warning/subtle"
+#       usage: "Warning variant background"
+#     - token: "$color/bg/error/subtle"
+#       usage: "Error variant background"
+#     - token: "$color/text/success/default"
+#       usage: "Success variant text + icon"
+#     - token: "$color/text/warning/default"
+#       usage: "Warning variant text + icon"
+#     - token: "$color/text/error/default"
+#       usage: "Error variant text + icon"
+#   radius:
+#     - token: "$radius/full"
+#       usage: "Pill shape"
+#   typography:
+#     - token: "$text/label/xs/medium"
+#       usage: "Badge label"
+#
+# ds_components:
+#   - name: Icon
+#     usage: "Leading status icon (check-circle, alert-triangle, x-circle)"
+#
+# learnings: []
+#
+# acceptance:
+#   - "All 3 status variants exist as component variants"
+#   - "All tokens correctly applied (no hardcoded hex or px values)"
+#   - "label (TEXT) and hasIcon (BOOLEAN) properties exposed"
+#   - "Pill radius uses $radius/full token"

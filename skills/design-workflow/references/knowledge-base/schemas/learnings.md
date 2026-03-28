@@ -214,6 +214,61 @@ return (async function() {
 
 ---
 
+## Recipe Integration
+
+Learnings can be automatically applied to recipes (parameterized scene graph templates). This creates a feedback loop: corrections improve future generations without manual intervention.
+
+### New Field: `recipePatched`
+
+Each learning entry gains an optional field:
+
+```json
+{
+  "id": "l-20260320-001",
+  "scope": "contextual",
+  "context": { "screenType": "settings", "component": "card", "section": "content" },
+  "change": { ... },
+  "rule": "...",
+  "signals": 2,
+  "history": [ ... ],
+  "recipePatched": ["r-settings-screen-001"]
+}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `recipePatched` | no | Array of recipe IDs this learning has been applied to. Absent or empty means no recipes patched yet. |
+
+### Auto-Patch Logic
+
+When a learning's `signals` reaches **>= 2**, the system scans matching recipes and patches them:
+
+1. **Filter recipes:** Match by `context.screenType` against recipe `meta.archetype`, and `context.component`/`context.section` against recipe `meta.tags`.
+2. **Check not already applied:** Skip recipes whose ID is already in the learning's `recipePatched` array.
+3. **Apply patch:** In the recipe's `graph`, find nodes where the learning's `change.property` uses the `change.from` token, and replace with `change.to` token.
+4. **Update recipe:** Increment recipe `version`, append to `evolution_log`, add learning ID to `learnings_applied`, update `lastEvolvedAt` and `confidence`.
+5. **Update learning:** Add the recipe ID to `recipePatched`.
+
+### Promotion and Recipes
+
+When a learning is promoted to `"global"` scope (signals >= 3, 2+ screen types):
+
+1. **Scan ALL recipes** (not just archetype-matching ones).
+2. Apply the same patch logic to every recipe containing the affected property + token combination.
+3. Update `recipePatched` with all newly patched recipe IDs.
+
+This ensures global learnings propagate across the entire recipe library.
+
+### Contradiction Handling
+
+If a learning would patch a recipe but contradicts another learning already applied to that recipe (same `property`, different `to` value):
+
+1. Do NOT auto-patch.
+2. Add a flag entry to `learnings.json` with description: `"Contradicting learnings for {property} on recipe {recipeId}"`.
+3. Wait for user resolution.
+
+---
+
 ## How Learnings Are Used
 
 ### During `spec` (Step 2.5)

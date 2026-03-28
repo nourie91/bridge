@@ -1,7 +1,7 @@
 {
   "name": "bridge-ds",
-  "version": "2.5.1",
-  "description": "AI-powered design generation in Figma — spec-first, DS-native, with a learning loop that improves over time. Extracts your real design system, writes validated specs, and generates production-ready Figma designs using actual DS components and tokens.",
+  "version": "3.0.0",
+  "description": "Compiler-driven design generation in Figma — declarative scene graphs compiled into DS-native Figma designs. Extracts your real design system, generates CSpec specifications, and compiles them into production-ready Figma output with recipes that improve over time.",
   "author": {
     "name": "noemuch",
     "url": "https://github.com/noemuch"

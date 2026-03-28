@@ -1,84 +1,84 @@
 # Bridge DS — Claude Code Instructions
 
-Bridge DS is an AI-powered design workflow that generates Figma designs using your real design system. It supports two MCP transports: [figma-console-mcp](https://github.com/southleft/figma-console-mcp) (preferred) and the official Figma MCP server (fallback).
+Bridge DS is a compiler-driven design workflow that generates Figma designs using MCP. Claude produces declarative JSON scene graphs; the compiler generates correct Figma Plugin API scripts.
 
 ## Architecture
 
 ```
-Claude Code  ──MCP──>  figma-console-mcp  ──WebSocket──>  Figma Desktop  (local, preferred)
-Claude Code  ──MCP──>  Figma MCP Server   ──Cloud──>      Figma Cloud    (official, fallback)
+Claude Code ──CSpec YAML──> Compiler (local) ──Plugin API──> MCP ──> Figma
 ```
 
-All Figma operations use MCP tools — no custom server, no HTTP calls, no curl. See `skills/design-workflow/references/transport-adapter.md` for transport detection and tool mapping.
+**Key principle:** Claude NEVER writes raw Plugin API code. The compiler enforces all 26 Figma API rules automatically.
 
-## Key MCP Tools
+## MCP Transports
 
-Tools vary by transport. See `references/transport-adapter.md` for the full mapping.
+Two transports, auto-detected. See `skills/design-workflow/references/transport-adapter.md` for full mapping.
 
-| Operation | Console transport | Official transport |
-|-----------|------------------|--------------------|
-| Execute Plugin API code | `figma_execute` | `use_figma` |
-| Take screenshot | `figma_take_screenshot` | `get_screenshot` |
-| Full DS extraction | `figma_get_design_system_kit` | Composite (see transport-adapter.md) |
-| Get variables | `figma_get_variables` | `get_variable_defs` |
-| Get styles | `figma_get_styles` | `search_design_system` |
-| Search components | `figma_search_components` | `search_design_system` |
-| Connection check | `figma_get_status` | `whoami` |
+| Operation | Console (preferred) | Official (fallback) |
+|-----------|-------------------|-------------------|
+| Execute code | `figma_execute` | `use_figma` |
+| Screenshot | `figma_take_screenshot` | `get_screenshot` |
+| DS extraction | `figma_get_design_system_kit` | Composite strategy |
+| Variables | `figma_get_variables` | `get_variable_defs` |
+| Styles | `figma_get_styles` | `search_design_system` |
+| Components | `figma_search_components` | `search_design_system` |
+| Connection | `figma_get_status` | `whoami` |
 
-## Script Structure
-
-Script format depends on the active transport. See `references/transport-adapter.md` Section C for full rules.
-
-**Console transport (figma_execute) — IIFE wrapper mandatory:**
-
-```javascript
-return (async function() {
-  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-  // ... Plugin API code ...
-  return { success: true };
-})();
-```
-
-**Official transport (use_figma) — top-level await, no IIFE:**
-
-```javascript
-await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-// ... Plugin API code ...
-return { success: true };
-```
-
-Called as: `use_figma({ fileKey: "...", description: "...", code: "..." })`
-
-## Critical Figma API Rules
-
-Full rules: `skills/design-workflow/references/figma-api-rules.md`
-
-**Top 5 (most common bugs):**
-
-1. **FILL after appendChild** — Set `layoutSizingHorizontal = "FILL"` AFTER `parent.appendChild(child)`, never before
-2. **resize() overrides sizing** — Call `resize()` FIRST, then set `primaryAxisSizingMode`
-3. **Colors via setBoundVariableForPaint** — Not `setBoundVariable` (different API for fills/strokes)
-4. **textAutoResize after width** — Set characters → append → FILL → then `textAutoResize = "HEIGHT"`
-5. **DS component reuse** — NEVER recreate existing components as raw frames. Always import via `importComponentByKeyAsync`
-
-## Helpers
-
-Helpers (`mf`, `appendFill`, `bindPadding`, `bindRadius`) and the standard script boilerplate are defined in `skills/design-workflow/references/figma-api-rules.md` (Standard Script Boilerplate section). Always copy them from there.
-
-## Design Workflow
+## Commands
 
 The `/design-workflow` skill handles everything:
 
-```
-/design-workflow setup    → Extract DS + build knowledge base
-/design-workflow spec     → Write component or screen specification
-/design-workflow design   → Generate in Figma (atomic, verified)
-/design-workflow review   → Validate against spec + tokens
-/design-workflow done     → Archive and ship
-/design-workflow drop     → Abandon with preserved learnings
-/design-workflow learn    → Diff design vs corrections, extract learnings
-/design-workflow sync     → Incremental DS sync (no full re-setup)
-/design-workflow status   → Show current state, suggest next
-```
+| Command | Purpose |
+|---------|---------|
+| `make <description>` | Spec + compile + execute + verify (unified flow) |
+| `fix` | Diff corrections, learn, iterate |
+| `done` | Archive, recipe extraction, ship |
+| `setup` | Extract DS + build knowledge base |
+| `status` | Show current state, suggest next |
+| `drop` | Abandon with preserved learnings |
 
 Read `skills/design-workflow/SKILL.md` for the full workflow definition.
+
+## Compiler
+
+Invocation:
+```bash
+node lib/compiler/compile.js --input <json> --kb <kb-path> --transport <console|official>
+```
+
+The compiler takes a scene graph JSON with `$token` references and outputs executable code chunks. See `skills/design-workflow/references/compiler-reference.md` for the JSON format.
+
+## Scene Graph (summary)
+
+Claude produces JSON with node types: FRAME, TEXT, INSTANCE, CLONE, RECTANGLE, ELLIPSE, REPEAT, CONDITIONAL. All values use `$token` references (`$spacing/md`, `$color/bg/neutral/default`, `$text/heading/xl`, `$comp/Button`). The compiler resolves tokens against the knowledge base registries.
+
+## Recipe System
+
+Pre-built scene graph templates in `knowledge-base/recipes/` that evolve with user corrections. Recipes are scored against user descriptions and used as starting points when matched.
+
+## Workflow
+
+```
+setup (once) → make → [fix cycle] → done
+```
+
+`make` = context load + recipe match + CSpec generation + compile + execute + verify. Iteration happens within `make` (describe changes) or via `fix` (manual Figma corrections).
+
+## Knowledge Base
+
+```
+knowledge-base/
+  registries/      ← components.json, variables.json, text-styles.json, icons.json
+  guides/          ← tokens/, components/, patterns/, assets/
+  recipes/         ← _index.json + recipe JSON files
+  learnings.json   ← Accumulated design preferences
+```
+
+## References
+
+| Reference | Path |
+|-----------|------|
+| Compiler reference | `skills/design-workflow/references/compiler-reference.md` |
+| Transport adapter | `skills/design-workflow/references/transport-adapter.md` |
+| Quality gates | `skills/design-workflow/references/quality-gates.md` |
+| CSpec templates | `skills/design-workflow/references/templates/` |
