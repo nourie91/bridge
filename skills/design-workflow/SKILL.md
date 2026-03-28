@@ -14,7 +14,7 @@ description: >
 
 > Compiler-driven, recipe-accelerated workflow for designers using Claude Code to design in Figma.
 > Powered by Figma MCP transport (console or official). See `references/transport-adapter.md`.
-> **All output in the user's language.**
+> **Conversation** in the user's language. **All generated artifacts** (KB, CSpecs, guides, learnings, recipes, scene graphs) in **English only**.
 
 ---
 
