@@ -6,7 +6,7 @@
 
 ## Purpose
 
-`learnings.json` stores corrections the user makes to generated designs. When Bridge generates a design and the user manually fixes it in Figma, the `learn` action extracts those changes and persists them here. Future generations consult these learnings to avoid repeating the same mistakes.
+`learnings.json` stores corrections the user makes to generated designs. When Bridge generates a design and the user manually fixes it in Figma, the `fix` action extracts those changes and persists them here. Future generations consult these learnings to avoid repeating the same mistakes.
 
 ---
 
@@ -101,7 +101,7 @@ A learning starts as `"contextual"` and can be promoted to `"global"`:
 
 ## Snapshot Structure
 
-Snapshots are saved after design generation to enable diffing during `learn`.
+Snapshots are saved after design generation to enable diffing during `fix`.
 
 **File:** `specs/active/{name}-snapshot.json`
 
@@ -111,7 +111,9 @@ Snapshots are saved after design generation to enable diffing during `learn`.
     "spec": "settings-screen",
     "generatedAt": "YYYY-MM-DDTHH:mm:ss",
     "rootNodeId": "123:456",
-    "fileKey": "abc123"
+    "fileKey": "abc123",
+    "recipe": "r-settings-screen-001",
+    "learningsApplied": ["l-20260320-001"]
   },
   "tree": {
     "id": "123:456",
@@ -271,21 +273,21 @@ If a learning would patch a recipe but contradicts another learning already appl
 
 ## How Learnings Are Used
 
-### During `spec` (Step 2.5)
+### During `make` (Phase C — CSpec generation)
 
 Load `learnings.json`, filter by `screenType` matching the new spec's type. Display matching learnings as **"Known Preferences"** in the spec output.
 
-### During `design` (Step 1e)
+### During `make` (Phase D — Compile + Execute)
 
 After pattern matching and before generation, load `learnings.json` and filter:
 - **Global learnings:** Always apply
 - **Contextual learnings:** Match by `screenType`, `component`, or `section`
 
-List applicable learnings in the pre-script audit and integrate into generation scripts.
+List applicable learnings and integrate into scene graph JSON.
 
 ### During `done`
 
-Persist any learnings from the current `learn` session. Clean up the snapshot file.
+Persist any learnings from the current `fix` session. Clean up the snapshot file.
 
 ---
 
@@ -295,7 +297,7 @@ Persist any learnings from the current `learn` session. Clean up the snapshot fi
 knowledge-base/
   learnings.json          ← Persistent learning store
 specs/active/
-  {name}-snapshot.json    ← Temporary snapshot (deleted after done)
+  {name}-snapshot.json    ← Snapshot (moved to specs/shipped/ after done)
 ```
 
 ---

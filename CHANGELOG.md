@@ -2,6 +2,17 @@
 
 All notable changes to Bridge DS are documented here.
 
+## [3.0.1] — 2026-03-29
+
+### Fixed
+- Compiler: `CompilerError` now extends `Error` for proper catch/stack traces
+- Compiler: fixed ~28 broken constructor calls in schema validation
+- Compiler: aligned validation severity with push destinations (errors vs warnings)
+- Compiler: added try/catch around wrap stage to prevent uncaught throws
+- Compiler: removed dead code (unused import, no-op function, dead concat)
+- Docs: replaced all stale v2 terminology (`learn`→`fix`, `spec`→`make`, `PASS review`→`<= 2 corrections`)
+- CLI: removed obsolete `learn` command from help text
+
 ## [3.0.0] — 2026-03-28
 
 ### Breaking

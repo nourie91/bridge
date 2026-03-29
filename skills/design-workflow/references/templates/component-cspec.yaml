@@ -3,8 +3,8 @@
 # ============================================================================
 #
 # This YAML template defines a component specification.
-# Claude fills this in during the `spec` phase, then converts it to
-# scene graph JSON during the `design` phase for the compiler.
+# Claude fills this in during `make` Phase C, then converts it to
+# scene graph JSON during `make` Phase D for the compiler.
 #
 # RULES:
 # - All colors, spacing, radius MUST be $token references (never raw values)

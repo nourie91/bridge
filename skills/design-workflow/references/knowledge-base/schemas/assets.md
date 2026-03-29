@@ -65,7 +65,7 @@ For very large asset libraries (e.g., 1300+ financial logos), extracting every k
 
 1. **Extract keys for commonly-used items** (top 50-100) into the `items` array
 2. **Document naming patterns** in `categories` for the rest
-3. **On-demand extraction**: When a specific asset is needed during `design`, use `figma_execute` to search by name and get the key:
+3. **On-demand extraction**: When a specific asset is needed during `make`, use `figma_execute` to search by name and get the key:
 
 ```js
 return (async function() {

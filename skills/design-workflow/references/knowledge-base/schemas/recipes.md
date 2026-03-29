@@ -185,7 +185,7 @@ Array of learning IDs from `learnings.json` that have been patched into this rec
 
 ## Extraction Script
 
-When `done` runs and the design qualifies for recipe extraction (screen mode, PASS review, <= 2 corrections), execute this procedure:
+When `done` runs and the design qualifies for recipe extraction (screen mode, completed with <= 2 corrections), execute this procedure:
 
 ### Step 1: Identify Parameters
 
@@ -210,7 +210,7 @@ Take the final (post-correction) scene graph and:
 id          = "r-{archetype}-{NNN}" (NNN = zero-padded sequence)
 version     = 1
 successCount = 1
-avgCorrections = (number of corrections in this learn cycle)
+avgCorrections = (number of corrections in this fix cycle)
 confidence  = base_score * recency_weight * correction_decay
             = min(1.0, 0.70 + 0.05) * 1.0 * max(0.60, 1.0 - avgCorrections * 0.15)
 ```

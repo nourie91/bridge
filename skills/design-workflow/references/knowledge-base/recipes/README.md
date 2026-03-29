@@ -1,7 +1,7 @@
 # Recipe System
 
 > **Recipes are parameterized scene graph templates for common screen archetypes.**
-> They encode proven layout structure, DS component usage, and token bindings that have been validated through the learn cycle.
+> They encode proven layout structure, DS component usage, and token bindings that have been validated through the fix cycle.
 
 ---
 
@@ -13,7 +13,7 @@ Recipes differ from raw scene graphs in three ways:
 
 - **Parameterized:** Slots marked with `{{ param }}` are filled at hydration time.
 - **DS-aware:** Component references use `@lookup:ComponentName` syntax, resolved against the live registry at compile time.
-- **Battle-tested:** Every recipe was extracted from a design that passed review with minimal corrections, and evolves as learnings accumulate.
+- **Battle-tested:** Every recipe was extracted from a design that completed with <= 2 corrections, and evolves as learnings accumulate.
 
 ---
 
@@ -99,8 +99,7 @@ Each recipe is a standalone JSON file stored in `recipes/{id}.json`.
 A recipe is extracted when ALL of these criteria are met:
 
 1. The spec was generated in **screen mode** (not component mode).
-2. The design **passed review** (all zones PASS).
-3. The design required **<= 2 corrections** during the learn cycle.
+2. The design **completed with <= 2 corrections** during the fix cycle.
 
 Extraction happens automatically during the `done` action. The scene graph from the final (corrected) design is templatized: concrete values become `{{ param }}` placeholders, component keys become `@lookup:Name` references.
 
