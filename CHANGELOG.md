@@ -2,23 +2,20 @@
 
 All notable changes to Bridge DS are documented here.
 
-## [3.2.1] — 2026-04-15
+## [3.2.2] — 2026-04-15
 
 ### Changed
-
-- **Repository cleanup.** Removed all author-trail artifacts and
-  third-party library references from documentation, plans, and skill
-  files. Replaced placeholder company/product names in examples with
-  generic `Acme` / `acme-design-system` / `acme-corp/` for clarity and
-  neutrality.
-- **Docs reorganised.** Spec and plan documents live at `docs/specs/`
-  and `docs/plans/` for a cleaner top-level structure.
+- Plugin manifest versions aligned at `3.2.2` across `package.json`,
+  `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and
+  `.cursor-plugin/plugin.json` (resolves prior version drift).
+- `skills/design-workflow/SKILL.md` frontmatter updated to
+  `name: design-workflow` / `version: 3.2.2`.
 
 ### Fixed
-
-- Internal path references updated across `CLAUDE.md`, `CHANGELOG.md`,
-  and the spec/plan documents to reflect the new `docs/specs/` and
-  `docs/plans/` locations.
+- README: corrected Figma Desktop plugin import instructions (point to
+  the `figma-console-mcp` manifest rather than a non-existent file).
+- README: documented the `specs/backlog/` directory created by
+  `bridge-ds init`.
 
 ## [3.2.0] — 2026-04-15
 
@@ -30,18 +27,14 @@ All notable changes to Bridge DS are documented here.
 - **Red Flags rationalization table** in `skills/design-workflow/SKILL.md` — Eight common rationalizations with reality counters (hardcode shortcuts, compiler skepticism, screenshot skipping, stale nodeId memory, forbidden API reads, user-approval workarounds, raw Plugin API reuse, inline scripting).
 
 ### Changed
-- **`skills/design-workflow/SKILL.md` description** rewritten as triggers-only (workflow-summary descriptions cause LLM shortcutting when they read the field in isolation).
+- **`skills/design-workflow/SKILL.md` description** rewritten as triggers-only (per `obra/superpowers` research — workflow-summary descriptions cause LLM shortcutting).
 - **Action Router slimmed** in `skills/design-workflow/SKILL.md` — keyword→action routing delegated to `skills/using-bridge/SKILL.md`; design-workflow retains the minimal action→file map for self-sufficiency when invoked directly (~40 lines saved).
 - **`package.json` + `.claude-plugin/plugin.json`** version aligned at `3.2.0` (fixes pre-existing drift from `3.1.0` / `3.0.1`).
 - **`package.json` `files` array** now includes `hooks/` for npm distribution.
 
 ### Notes
 
-This release is the Phase 0+1 increment of the larger Bridge Docs +
-restructure work (spec:
-`docs/specs/2026-04-15-bridge-docs-and-restructure-design.md`).
-No breaking changes. Phase 2 (action skill split) ships in 3.5.0; Bridge
-Docs V0.1 lands in 4.0.0.
+No breaking changes.
 
 ## [3.1.0] — 2026-04-03
 
