@@ -3,10 +3,12 @@ import path from "node:path";
 
 export const CURRENT_KB_SCHEMA_VERSION = 1;
 
+export type KBSchemaErrorKind = "legacy-grouped" | "newer" | "corrupt" | "missing";
+
 export class KBSchemaError extends Error {
   constructor(
     message: string,
-    public readonly kind: "legacy" | "newer" | "corrupt" | "missing"
+    public readonly kind: KBSchemaErrorKind
   ) {
     super(message);
     this.name = "KBSchemaError";
@@ -64,7 +66,7 @@ export function assertKBCompatible(kbPath: string): void {
   if (shape === "legacy-grouped") {
     throw new KBSchemaError(
       `KB at ${kbPath} uses a legacy grouped-by-category shape. Run \`bridge-ds migrate\` to convert it to schema v${CURRENT_KB_SCHEMA_VERSION}.`,
-      "legacy"
+      "legacy-grouped"
     );
   }
   if (shape === "corrupt") {

@@ -1,6 +1,6 @@
 import { readFile, access } from "node:fs/promises";
 import path from "node:path";
-import { CURRENT_KB_SCHEMA_VERSION } from "../kb/schema-version.js";
+import { CURRENT_KB_SCHEMA_VERSION, KBSchemaError } from "../kb/schema-version.js";
 import { migrateLegacyToV1 } from "../kb/migrations/legacy-to-v1.js";
 
 export interface MigrateOptions {
@@ -9,7 +9,7 @@ export interface MigrateOptions {
 
 export interface MigrateResult {
   migrated: boolean;
-  from: "legacy-grouped" | "current" | "corrupt";
+  from: "legacy-grouped" | "current";
   to: number;
 }
 
@@ -44,12 +44,16 @@ async function detectShape(kbPath: string): Promise<"legacy-grouped" | "current"
 export async function migrate(opts: MigrateOptions): Promise<MigrateResult> {
   const shape = await detectShape(opts.kbPath);
   if (shape === "newer") {
-    throw new Error(
-      `KB schema is newer than this CLI supports (max ${CURRENT_KB_SCHEMA_VERSION}). Upgrade @noemuch/bridge-ds.`
+    throw new KBSchemaError(
+      `KB schema is newer than this CLI supports (max ${CURRENT_KB_SCHEMA_VERSION}). Upgrade @noemuch/bridge-ds.`,
+      "newer"
     );
   }
   if (shape === "corrupt") {
-    throw new Error(`KB at ${opts.kbPath} has an unrecognized shape or is missing. Re-run 'setup bridge'.`);
+    throw new KBSchemaError(
+      `KB at ${opts.kbPath} has an unrecognized shape or is missing. Re-run 'setup bridge'.`,
+      "corrupt"
+    );
   }
   if (shape === "current") {
     return { migrated: false, from: "current", to: CURRENT_KB_SCHEMA_VERSION };

@@ -69,6 +69,25 @@ test("migrateLegacyToV1 adds version to text-styles.json", async () => {
   }
 });
 
+test("migrateLegacyToV1 stamps version on icons.json when present, skips when absent", async () => {
+  const dir = cloneFixture();
+  const iconsFile = path.join(dir, "knowledge-base", "registries", "icons.json");
+  const fs = await import("node:fs");
+  fs.writeFileSync(iconsFile, JSON.stringify({ items: [{ name: "check" }] }));
+  try {
+    await migrateLegacyToV1(dir);
+    const parsed = JSON.parse(fs.readFileSync(iconsFile, "utf8"));
+    assert.equal(parsed.version, CURRENT_KB_SCHEMA_VERSION);
+    assert.ok(typeof parsed.generatedAt === "string");
+    assert.equal(parsed.items.length, 1);
+    // logos.json absent → migration does not create it
+    const logosFile = path.join(dir, "knowledge-base", "registries", "logos.json");
+    assert.equal(fs.existsSync(logosFile), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("after migration, assertKBCompatible passes", async () => {
   const dir = cloneFixture();
   try {
