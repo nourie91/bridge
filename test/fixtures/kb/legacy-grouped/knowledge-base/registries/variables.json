@@ -1,0 +1,5 @@
+{
+  "variables": [
+    { "key": "color/brand/primary", "name": "color/brand/primary", "resolvedType": "COLOR", "valuesByMode": { "light": "#000" } }
+  ]
+}

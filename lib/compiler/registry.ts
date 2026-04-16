@@ -4,6 +4,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { assertKBCompatible } from "../kb/schema-version.js";
 
 // ---------------------------------------------------------------------------
 // TYPES
@@ -69,30 +70,40 @@ export interface Registry {
 interface RawVariableItem {
   name: string;
   key: string;
-}
-interface RawVariableCollection {
-  variables?: RawVariableItem[];
+  resolvedType?: string;
+  valuesByMode?: Record<string, unknown>;
+  scopes?: string[];
 }
 interface RawVariablesFile {
-  collections?: Record<string, RawVariableCollection>;
+  version?: number;
+  variables?: RawVariableItem[];
 }
 
 interface RawComponentItem {
   name: string;
   key: string;
-  type: string;
-  properties?: Record<string, unknown>;
+  type?: string;
+  category?: string;
+  status?: string;
+  variants?: Array<{ name: string; values: string[] }>;
+  properties?: Array<{ name: string; type: string; default?: unknown }> | Record<string, unknown>;
+  description?: string;
 }
 interface RawComponentsFile {
-  components?: Record<string, RawComponentItem[]>;
+  version?: number;
+  components?: RawComponentItem[];
 }
 
 interface RawTextStyleItem {
   name: string;
   key: string;
+  fontFamily?: string;
+  fontStyle?: string;
+  fontSize?: number;
 }
 interface RawTextStylesFile {
-  textStyles?: Record<string, RawTextStyleItem[]>;
+  version?: number;
+  styles?: RawTextStyleItem[];
 }
 
 interface RawAssetItem {
@@ -139,22 +150,19 @@ function buildVariableIndex(data: RawVariablesFile | null): VariableIndex {
   const byName = new Map<string, VariableEntry>();
   const bySegment = new Map<string, VariableEntry[]>();
 
-  if (!data || !data.collections) return { byName, bySegment };
+  if (!data || !data.variables) return { byName, bySegment };
 
-  for (const [collName, coll] of Object.entries(data.collections)) {
-    const vars = coll.variables ?? [];
-    for (const v of vars) {
-      const entry: VariableEntry = { name: v.name, key: v.key, collection: collName };
-      byName.set(v.name, entry);
+  for (const v of data.variables) {
+    const entry: VariableEntry = { name: v.name, key: v.key, collection: "" };
+    byName.set(v.name, entry);
 
-      for (const seg of segmentKeys(v.name)) {
-        let bucket = bySegment.get(seg);
-        if (!bucket) {
-          bucket = [];
-          bySegment.set(seg, bucket);
-        }
-        bucket.push(entry);
+    for (const seg of segmentKeys(v.name)) {
+      let bucket = bySegment.get(seg);
+      if (!bucket) {
+        bucket = [];
+        bySegment.set(seg, bucket);
       }
+      bucket.push(entry);
     }
   }
 
@@ -166,17 +174,16 @@ function buildComponentIndex(data: RawComponentsFile | null): ComponentIndex {
 
   if (!data || !data.components) return { byName };
 
-  for (const cat of Object.keys(data.components)) {
-    const items = data.components[cat] ?? [];
-    for (const comp of items) {
-      const entry: ComponentEntry = {
-        name: comp.name,
-        key: comp.key,
-        type: comp.type,
-        properties: comp.properties ?? {},
-      };
-      byName.set(comp.name.toLowerCase(), entry);
-    }
+  for (const comp of data.components) {
+    const entry: ComponentEntry = {
+      name: comp.name,
+      key: comp.key,
+      type: comp.type ?? "COMPONENT",
+      properties: Array.isArray(comp.properties)
+        ? {}
+        : ((comp.properties as Record<string, unknown>) ?? {}),
+    };
+    byName.set(comp.name.toLowerCase(), entry);
   }
 
   return { byName };
@@ -186,22 +193,19 @@ function buildTextStyleIndex(data: RawTextStylesFile | null): TextStyleIndex {
   const byName = new Map<string, TextStyleEntry>();
   const bySegment = new Map<string, TextStyleEntry[]>();
 
-  if (!data || !data.textStyles) return { byName, bySegment };
+  if (!data || !data.styles) return { byName, bySegment };
 
-  for (const cat of Object.keys(data.textStyles)) {
-    const styles = data.textStyles[cat] ?? [];
-    for (const s of styles) {
-      const entry: TextStyleEntry = { name: s.name, key: s.key };
-      byName.set(s.name, entry);
+  for (const s of data.styles) {
+    const entry: TextStyleEntry = { name: s.name, key: s.key };
+    byName.set(s.name, entry);
 
-      for (const seg of segmentKeys(s.name)) {
-        let bucket = bySegment.get(seg);
-        if (!bucket) {
-          bucket = [];
-          bySegment.set(seg, bucket);
-        }
-        bucket.push(entry);
+    for (const seg of segmentKeys(s.name)) {
+      let bucket = bySegment.get(seg);
+      if (!bucket) {
+        bucket = [];
+        bySegment.set(seg, bucket);
       }
+      bucket.push(entry);
     }
   }
 
@@ -229,7 +233,8 @@ function buildAssetIndex(data: RawAssetsFile | null): AssetIndex {
  * Load all KB registry files and return a fully-indexed Registry object.
  */
 export function loadRegistry(kbPath: string): Registry {
-  const regPath = path.join(kbPath, "registries");
+  assertKBCompatible(kbPath);
+  const regPath = path.join(kbPath, "knowledge-base", "registries");
 
   const variablesData = readJSON<RawVariablesFile>(path.join(regPath, "variables.json"));
   const componentsData = readJSON<RawComponentsFile>(path.join(regPath, "components.json"));

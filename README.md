@@ -149,7 +149,16 @@ Direct CLI commands (typically invoked under the hood by the skills):
 | `bridge-ds docs mcp`                                 | Launch the local MCP server (`ds://` URIs over stdio)       |
 | `bridge-ds doctor`                                   | Diagnose config, connectivity, docs health, cron            |
 | `bridge-ds extract --headless`                       | Figma REST extraction (CI-friendly, `FIGMA_TOKEN` required) |
+| `bridge-ds migrate`                                  | Upgrade a legacy knowledge base to the current schema       |
 | `bridge-ds cron`                                     | Run the cron orchestrator (CI entry point)                  |
+
+### `bridge-ds migrate`
+
+Upgrades a knowledge base written by an older Bridge version to the
+current schema. Run this in a repo where `docs build` or the compiler
+reports a `KBSchemaError`.
+
+    npx @noemuch/bridge-ds migrate --kb-path bridge-ds
 
 ## Recipes
 

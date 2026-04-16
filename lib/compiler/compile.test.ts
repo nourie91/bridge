@@ -22,46 +22,59 @@ interface TempKb {
 
 function writeTempKb(): TempKb {
   const root = mkdtempSync(path.join(os.tmpdir(), "bridge-compile-test-"));
-  const regs = path.join(root, "registries");
+  const regs = path.join(root, "knowledge-base", "registries");
   mkdirSync(regs, { recursive: true });
 
   writeFileSync(
     path.join(regs, "variables.json"),
     JSON.stringify({
-      collections: {
-        Tokens: {
-          variables: [
-            { name: "color/bg/primary", key: "VariableID:1:1" },
-            { name: "spacing/md", key: "VariableID:1:2" },
-            { name: "radius/md", key: "VariableID:1:3" },
-          ],
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      variables: [
+        {
+          name: "color/bg/primary",
+          key: "VariableID:1:1",
+          resolvedType: "COLOR",
+          valuesByMode: {},
         },
-      },
+        { name: "spacing/md", key: "VariableID:1:2", resolvedType: "FLOAT", valuesByMode: {} },
+        { name: "radius/md", key: "VariableID:1:3", resolvedType: "FLOAT", valuesByMode: {} },
+      ],
     })
   );
 
   writeFileSync(
     path.join(regs, "components.json"),
     JSON.stringify({
-      components: {
-        actions: [
-          {
-            name: "Button",
-            key: "comp-button-key-0001",
-            type: "COMPONENT",
-            properties: {},
-          },
-        ],
-      },
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      components: [
+        {
+          name: "Button",
+          key: "comp-button-key-0001",
+          category: "actions",
+          status: "stable",
+          variants: [],
+          properties: [],
+        },
+      ],
     })
   );
 
   writeFileSync(
     path.join(regs, "text-styles.json"),
     JSON.stringify({
-      textStyles: {
-        label: [{ name: "text/label/md", key: "TextStyle:42" }],
-      },
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      styles: [
+        {
+          name: "text/label/md",
+          key: "TextStyle:42",
+          fontFamily: "Inter",
+          fontStyle: "Regular",
+          fontSize: 14,
+        },
+      ],
     })
   );
 

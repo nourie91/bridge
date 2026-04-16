@@ -1,0 +1,10 @@
+{
+  "components": {
+    "forms": [
+      { "key": "Input", "name": "Input", "status": "stable", "variants": [], "properties": [] }
+    ],
+    "actions": [
+      { "key": "Button", "name": "Button", "status": "stable", "variants": [], "properties": [] }
+    ]
+  }
+}

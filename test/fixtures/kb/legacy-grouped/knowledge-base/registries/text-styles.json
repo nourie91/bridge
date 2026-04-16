@@ -1,0 +1,5 @@
+{
+  "styles": [
+    { "key": "heading/xl", "name": "heading/xl", "fontFamily": "Inter", "fontStyle": "Regular", "fontSize": 32, "lineHeight": 40 }
+  ]
+}

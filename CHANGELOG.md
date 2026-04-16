@@ -4,6 +4,18 @@ All notable changes to Bridge DS are documented here.
 
 ## [Unreleased]
 
+### Added
+- **KB schema versioning (`lib/kb/schema-version.ts`)** — every KB read asserts compatibility via `assertKBCompatible`. Legacy grouped-by-category KBs fail fast with a structured `KBSchemaError` pointing at `bridge-ds migrate`.
+- **`bridge-ds migrate` CLI command** — auto-detects legacy KB shapes and converts them to schema v1 (flat arrays, stamped `version` and `generatedAt`). No-op on already-current KBs; refuses KBs written by a newer CLI.
+- **Legacy-to-v1 migration (`lib/kb/migrations/legacy-to-v1.ts`)** — flattens pre-v5 grouped `components.json` into the flat v1 shape used by the rest of the codebase.
+
+### Changed
+- Compiler registry (`loadRegistry`) rewritten to read the v1 flat-array schema at the canonical `knowledge-base/registries/` path, matching the layout produced by extraction and consumed by docs generation. Resolves a latent path inconsistency.
+- Test discovery script (`package.json#test:all`) now walks `dist/lib` and `dist/test` recursively via `node --test`, catching test files at deeper paths. Previous glob pattern missed subdirectory tests.
+
+### Fixed
+- (none — this release is additive + latent-bug resolution; no regressions)
+
 ## [5.0.0] — 2026-04-16
 
 Major cleanup + pro-grade tooling release. The skill workflow (`make`,
