@@ -1,8 +1,12 @@
 name: Bridge Docs — Daily Sync
 
+# NOTE: The daily schedule is disabled on Bridge's own repository because
+# Bridge is a CLI tool, not a real design system — the "meta" docs.config.yaml
+# uses figmaFileKey: "N/A" and there is no FIGMA_TOKEN secret configured.
+# This workflow exists here as a canonical template that setup-orchestrator
+# scaffolds into USER repositories (where the schedule is appropriate).
+# Manual invocation via workflow_dispatch is still supported.
 on:
-  schedule:
-    - cron: "0 6 * * *"
   workflow_dispatch:
 
 permissions:
