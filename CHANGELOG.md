@@ -9,6 +9,7 @@ All notable changes to Bridge DS are documented here.
 - `lib/kb/schema-version.ts`: `CURRENT_KB_SCHEMA_VERSION`, `KBSchemaError`, `assertKBCompatible`, `readKBSchemaVersion`
 - `assertKBCompatible` guard added to `docs build`, `docs sync`, and `loadRegistry` — legacy grouped KBs fail fast with a pointer to `bridge-ds migrate`
 - Compiler registry (`loadRegistry`) updated to read v1 flat-array schema (`variables[]`, `components[]`, `styles[]`) matching the `knowledge-base/registries/` path layout
+- `lib/kb/migrations/legacy-to-v1.ts`: `migrateLegacyToV1(kbPath)` flattens pre-v5 grouped-by-category `components.json` into the flat v1 shape and stamps `version`/`generatedAt` on all three registries
 
 ## [5.0.0] — 2026-04-16
 
