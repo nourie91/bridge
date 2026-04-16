@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, cpSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 const BIN = path.resolve("bin/bridge.js");
@@ -63,4 +65,19 @@ test("`extract` without --headless errors (safety net)", () => {
   const r = run(["extract"]);
   assert.notEqual(r.status, 0);
   assert.match(r.stderr, /Only headless extraction/);
+});
+
+test("bridge-ds migrate exits 0 on a legacy KB and makes it current", () => {
+  const FIXTURE = path.resolve("test/fixtures/kb/legacy-grouped");
+  const dir = mkdtempSync(path.join(tmpdir(), "bridge-cli-e2e-"));
+  cpSync(FIXTURE, dir, { recursive: true });
+  try {
+    const r = run(["migrate", "--kb-path", dir]);
+    assert.equal(r.status, 0, `stderr: ${r.stderr}`);
+    const result = JSON.parse(r.stdout);
+    assert.equal(result.migrated, true);
+    assert.equal(result.from, "legacy-grouped");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

@@ -7,6 +7,7 @@ import { build, sync, check } from "../docs/generate.js";
 import { startMcpServer } from "../docs/mcp-server.js";
 import { runCron } from "../cron/orchestrator.js";
 import { parseDocsConfig } from "../config/docs-config.js";
+import { migrate } from "./migrate.js";
 
 export const VERSION = "5.0.0";
 
@@ -28,6 +29,7 @@ Commands:
   docs mcp               Launch the MCP server (stdio, ds:// URIs)
   doctor                 Run diagnostics (config, connectivity, health)
   extract --headless     Extract DS via Figma REST (requires FIGMA_TOKEN)
+  migrate                Migrate a legacy KB to the current schema
   cron                   Run the cron orchestrator (CI entry point)
   init-docs              Interactive docs bootstrap (deprecated — use 'setup bridge' in Claude Code)
   help | version
@@ -104,6 +106,13 @@ export async function main() {
       case "cron":
         console.log(await runCron({ configPath: "docs.config.yaml" }));
         return;
+      case "migrate": {
+        const args = parseFlags([sub, ...rest]);
+        const kbPath = args.get("kb-path") ?? ".";
+        const result = await migrate({ kbPath });
+        console.log(JSON.stringify(result, null, 2));
+        return;
+      }
       case "init":
         deprecationNotice(
           "bridge-ds setup --ds-name <name> --figma-key <key>   (or 'setup bridge' in Claude Code)"
