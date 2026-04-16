@@ -2,19 +2,23 @@
 
 All notable changes to Bridge DS are documented here.
 
-## [Unreleased]
+## [5.1.0] — 2026-04-16
+
+KB schema versioning + guided migration. Consumer repos with a pre-v5 KB
+(grouped-by-category `components.json`) now fail fast with a clear
+pointer to `bridge-ds migrate` instead of cryptic downstream errors.
 
 ### Added
 - **KB schema versioning (`lib/kb/schema-version.ts`)** — every KB read asserts compatibility via `assertKBCompatible`. Legacy grouped-by-category KBs fail fast with a structured `KBSchemaError` pointing at `bridge-ds migrate`.
-- **`bridge-ds migrate` CLI command** — auto-detects legacy KB shapes and converts them to schema v1 (flat arrays, stamped `version` and `generatedAt`). No-op on already-current KBs; refuses KBs written by a newer CLI.
+- **`bridge-ds migrate` CLI command** — auto-detects legacy KB shapes and converts them to schema v1 (flat arrays, stamped `version` and `generatedAt` across `components`, `variables`, `text-styles`, and assets `icons` / `logos` / `illustrations` when present). No-op on already-current KBs; refuses KBs written by a newer CLI.
 - **Legacy-to-v1 migration (`lib/kb/migrations/legacy-to-v1.ts`)** — flattens pre-v5 grouped `components.json` into the flat v1 shape used by the rest of the codebase.
 
 ### Changed
-- Compiler registry (`loadRegistry`) rewritten to read the v1 flat-array schema at the canonical `knowledge-base/registries/` path, matching the layout produced by extraction and consumed by docs generation. Resolves a latent path inconsistency.
+- Compiler registry (`loadRegistry`) rewritten to read the v1 flat-array schema at the canonical `knowledge-base/registries/` path, matching the layout produced by extraction and consumed by docs generation. Resolves a latent path inconsistency. **Breaking for direct programmatic consumers of `loadRegistry` via the `./compiler` export** — CLI behavior is unchanged.
 - Test discovery script (`package.json#test:all`) now walks `dist/lib` and `dist/test` recursively via `node --test`, catching test files at deeper paths. Previous glob pattern missed subdirectory tests.
 
 ### Fixed
-- (none — this release is additive + latent-bug resolution; no regressions)
+- (none — this release is additive + latent-bug resolution; no CLI regressions)
 
 ## [5.0.0] — 2026-04-16
 

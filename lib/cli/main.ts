@@ -9,7 +9,7 @@ import { runCron } from "../cron/orchestrator.js";
 import { parseDocsConfig } from "../config/docs-config.js";
 import { migrate } from "./migrate.js";
 
-export const VERSION = "5.0.0";
+export const VERSION = "5.1.0";
 
 async function loadCfg() {
   const raw = await readFile("docs.config.yaml", "utf8");

@@ -14,7 +14,7 @@ export interface McpServerOptions {
 
 export async function startMcpServer(opts: McpServerOptions) {
   const server = new Server(
-    { name: "bridge-ds", version: "5.0.0" },
+    { name: "bridge-ds", version: "5.1.0" },
     { capabilities: { resources: {} } }
   );
 
