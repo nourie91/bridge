@@ -19,6 +19,7 @@ import { generateMigrationDoc } from "./generators/migration.js";
 import { generateLlmsIndex } from "./generators/llms-txt.js";
 import { lintDoc, type LintIssue } from "./linter.js";
 import { readState, writeState } from "./state.js";
+import { assertKBCompatible } from "../kb/schema-version.js";
 
 type DocKind = "component" | "foundation" | "pattern";
 
@@ -38,6 +39,7 @@ export interface SyncOptions {
 }
 
 export async function sync(opts: SyncOptions): Promise<SyncReport> {
+  assertKBCompatible(opts.kbPath);
   const components = await readComponentRegistry(
     path.join(opts.kbPath, "knowledge-base/registries/components.json")
   );
@@ -229,6 +231,7 @@ export async function sync(opts: SyncOptions): Promise<SyncReport> {
 }
 
 export async function build(opts: SyncOptions): Promise<SyncReport> {
+  assertKBCompatible(opts.kbPath);
   // build = full regen. Force state reset then run sync.
   await writeState(".", { version: 1, registriesHash: "", learningsHash: "", perFileHashes: {} });
   return sync(opts);

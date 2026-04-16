@@ -4,6 +4,12 @@ All notable changes to Bridge DS are documented here.
 
 ## [Unreleased]
 
+### Added (v6 schema-versioning branch)
+
+- `lib/kb/schema-version.ts`: `CURRENT_KB_SCHEMA_VERSION`, `KBSchemaError`, `assertKBCompatible`, `readKBSchemaVersion`
+- `assertKBCompatible` guard added to `docs build`, `docs sync`, and `loadRegistry` — legacy grouped KBs fail fast with a pointer to `bridge-ds migrate`
+- Compiler registry (`loadRegistry`) updated to read v1 flat-array schema (`variables[]`, `components[]`, `styles[]`) matching the `knowledge-base/registries/` path layout
+
 ## [5.0.0] — 2026-04-16
 
 Major cleanup + pro-grade tooling release. The skill workflow (`make`,
