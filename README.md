@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner-placeholder.png" alt="Bridge" width="600" />
+  <img src="docs/assets/bridge-banner.jpg" alt="Bridge" width="800" />
 </p>
 
 <p align="center">
