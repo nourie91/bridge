@@ -1,6 +1,6 @@
 import { writeFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseDocsConfig } from "../config/docs-config.js";
+import { parseKBConfig } from "../config/kb-config.js";
 import { extractFromFigma } from "../extractors/figma-rest.js";
 
 export interface ExtractOptions {
@@ -11,7 +11,7 @@ export interface ExtractOptions {
 export async function extractHeadless(opts: ExtractOptions = {}) {
   const cfgPath = opts.configPath ?? "docs.config.yaml";
   const raw = await readFile(cfgPath, "utf8");
-  const cfg = parseDocsConfig(raw);
+  const cfg = parseKBConfig(raw);
   const token = process.env.FIGMA_TOKEN;
   if (!token) throw new Error("FIGMA_TOKEN env var is required");
 

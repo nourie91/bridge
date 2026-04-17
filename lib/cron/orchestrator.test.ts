@@ -10,7 +10,7 @@ test("runCron throws a clear error when FIGMA_TOKEN is unset", async () => {
   delete process.env.FIGMA_TOKEN;
   try {
     await assert.rejects(
-      () => runCron({ configPath: "test/fixtures/docs-config/minimal.yaml" }),
+      () => runCron({ configPath: "test/fixtures/kb-config/minimal.yaml" }),
       /FIGMA_TOKEN env var is required/
     );
   } finally {
@@ -22,7 +22,7 @@ test("runCron surfaces config parsing errors instead of calling Figma", async ()
   const original = process.env.FIGMA_TOKEN;
   process.env.FIGMA_TOKEN = "dummy";
   try {
-    await assert.rejects(() => runCron({ configPath: "test/fixtures/docs-config/missing.yaml" }));
+    await assert.rejects(() => runCron({ configPath: "test/fixtures/kb-config/missing.yaml" }));
   } finally {
     if (original !== undefined) process.env.FIGMA_TOKEN = original;
     else delete process.env.FIGMA_TOKEN;

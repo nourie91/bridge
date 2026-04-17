@@ -2,7 +2,7 @@
 import { writeFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { extractFromFigma } from "../extractors/figma-rest.js";
-import { parseDocsConfig } from "../config/docs-config.js";
+import { parseKBConfig } from "../config/kb-config.js";
 
 export interface CronOptions {
   configPath: string;
@@ -10,7 +10,7 @@ export interface CronOptions {
 
 export async function runCron(opts: CronOptions) {
   const raw = await readFile(opts.configPath, "utf8");
-  const cfg = parseDocsConfig(raw);
+  const cfg = parseKBConfig(raw);
   const token = process.env.FIGMA_TOKEN;
   if (!token) throw new Error("FIGMA_TOKEN env var is required");
 

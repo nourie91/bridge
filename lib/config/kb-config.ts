@@ -8,7 +8,7 @@ const CronCfg = z.object({
   autoMergeIfTrivial: z.boolean().default(false),
 });
 
-export const DocsConfigSchema = z.object({
+export const KBConfigSchema = z.object({
   dsName: z.string().min(1),
   tagline: z.string().optional(),
   figmaFileKey: z.string().min(1),
@@ -16,12 +16,12 @@ export const DocsConfigSchema = z.object({
   cron: CronCfg.default({}),
 });
 
-export type DocsConfig = z.infer<typeof DocsConfigSchema>;
+export type KBConfig = z.infer<typeof KBConfigSchema>;
 
-export function parseDocsConfig(raw: string): DocsConfig {
+export function parseKBConfig(raw: string): KBConfig {
   // JSON_SCHEMA rejects custom YAML tags (e.g. `!!js/function`) that could
   // execute code at parse time. The config is plain data, so this is safe
   // and strictly tighter than the library default.
   const parsed = yamlLoad(raw, { schema: JSON_SCHEMA });
-  return DocsConfigSchema.parse(parsed);
+  return KBConfigSchema.parse(parsed);
 }

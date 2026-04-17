@@ -16,7 +16,7 @@ Bridge requires a Figma Personal Access Token (`FIGMA_TOKEN`) to extract design-
 - `File variables` → Read-only (Enterprise plans only)
 - `Library content` → Read-only
 
-**Lifecycle hygiene (enforced by Bridge v4.1.0+):**
+**Lifecycle hygiene:**
 
 - Tokens pasted interactively in Claude Code use a stdin-only pipe (no echo, no shell history).
 - Tokens are validated in-memory, then sent directly to GitHub Secrets via `gh secret set` (stdin-piped, never via argv).
@@ -27,25 +27,21 @@ Bridge requires a Figma Personal Access Token (`FIGMA_TOKEN`) to extract design-
 
 ## Supply chain
 
-`@noemuch/bridge-ds` is published to npm with `--access public`. As of v4.1.0, we do not yet ship signed attestations; this is planned for v4.2.0+.
+`@noemuch/bridge-ds` is published to npm with `--access public`.
 
 **User mitigation:** Pin Bridge versions in your cron workflow:
 
 ```yaml
-- run: npm install @noemuch/bridge-ds@4.1.0 # not @latest
+- run: npx -y @noemuch/bridge-ds@6.0.0 cron --config docs.config.yaml
 ```
 
-**CI considerations:** The `bridge-docs-cron.yml` workflow runs inside GitHub Actions with access to `FIGMA_TOKEN`. Scope this secret to the `.github/workflows/bridge-docs-cron.yml` file only; do not add it to other workflows.
+**CI considerations:** The `bridge-kb-cron.yml` workflow runs inside GitHub Actions with access to `FIGMA_TOKEN`. Scope this secret to that workflow file only; do not add it to other workflows.
 
-## Known limitations (v4.1.0)
+## Known limitations
 
-- **figma-console-mcp** (the MCP server we rely on for interactive extraction) is a third-party unofficial tool. Its WebSocket runs on localhost. Any process with filesystem access to the user's machine could theoretically connect. Mitigation: the WebSocket pairs only with Figma Desktop; no tokens transit through it.
-- **Figma REST API for variables** requires an Enterprise plan. Non-Enterprise users will see a 403 for `/variables/local` and fall back to a reduced cron extract (components + text styles only). Interactive MCP extraction bypasses this limitation.
-
-## Incident history
-
-- 2026-04-15 — Initial security posture documented (v4.1.0).
+- **figma-console-mcp** (the MCP server for interactive extraction) is a third-party unofficial tool. Its WebSocket runs on localhost. Mitigation: the WebSocket pairs only with Figma Desktop; no tokens transit through it.
+- **Figma REST API for variables** requires an Enterprise plan. Non-Enterprise users will see a 403 for `/variables/local` and fall back to a reduced extract (components + text styles only). Interactive MCP extraction bypasses this limitation.
 
 ---
 
-_Last updated: 2026-04-15_
+_Last updated: 2026-04-17_
