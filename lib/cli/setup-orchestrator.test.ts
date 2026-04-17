@@ -30,10 +30,7 @@ test("scaffold creates the expected directory tree with defaults", async () => {
     const created = await scaffold({ dsName: "Spectra", figmaFileKey: "KEY123" });
     // Expected files and directories are returned in the `created` list
     // AND physically exist on disk.
-    for (const relPath of [
-      "docs.config.yaml",
-      ".github/workflows/bridge-docs-cron.yml",
-    ]) {
+    for (const relPath of ["docs.config.yaml", ".github/workflows/bridge-docs-cron.yml"]) {
       assert.ok(created.includes(relPath), `created list missing ${relPath}`);
       assert.ok(await exists(path.join(dir, relPath)), `${relPath} not on disk`);
     }

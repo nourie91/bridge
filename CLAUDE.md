@@ -46,13 +46,13 @@ Two transports, auto-detected. See `references/transport-adapter.md` for full ma
 
 Bridge uses a **multi-skill** Claude Code architecture. Commands are triggered by keywords routed through `using-bridge` (see the command map in that skill).
 
-| Skill                       | Trigger keyword             | Purpose                                                       |
-| --------------------------- | --------------------------- | ------------------------------------------------------------- |
-| `using-bridge`              | SessionStart (force-loaded) | Command map, iron laws, drop/status procedures (~500 tokens)  |
-| `generating-figma-design`   | `make <description>`        | CSpec → scene graph → compile → execute → verify              |
-| `learning-from-corrections` | `fix`                       | Diff Figma corrections, extract learnings, patch recipes      |
-| `shipping-and-archiving`    | `done`                      | Final Gate B verification, archive CSpec, extract recipes     |
-| `extracting-design-system`  | `setup bridge`              | Extract DS from Figma, scaffold repo, wire up cron            |
+| Skill                       | Trigger keyword             | Purpose                                                      |
+| --------------------------- | --------------------------- | ------------------------------------------------------------ |
+| `using-bridge`              | SessionStart (force-loaded) | Command map, iron laws, drop/status procedures (~500 tokens) |
+| `generating-figma-design`   | `make <description>`        | CSpec → scene graph → compile → execute → verify             |
+| `learning-from-corrections` | `fix`                       | Diff Figma corrections, extract learnings, patch recipes     |
+| `shipping-and-archiving`    | `done`                      | Final Gate B verification, archive CSpec, extract recipes    |
+| `extracting-design-system`  | `setup bridge`              | Extract DS from Figma, scaffold repo, wire up cron           |
 
 Shared references live at the repo root under `references/`:
 
